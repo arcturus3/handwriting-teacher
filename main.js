@@ -50,7 +50,7 @@ function submit() {
   fetch("/submit_canvas", {
     method: "POST",
     body: JSON.stringify({
-      canvas: ,
+      canvas: dataURL,
       sample: "Elliot",
     }),
     headers: {
