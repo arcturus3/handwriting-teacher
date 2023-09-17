@@ -72,7 +72,7 @@ def generate_score(
     for i, letter in enumerate(trimmed_sample):
         if text_presence[i]:
             if letter.upper() in scores and confidence_for_each_input_letter[input_index] > confidence_threshold:
-                scores[letter.upper()] = min(1, scores[letter.upper()] + 0.1)
+                scores[letter.upper()] = min(1, scores[letter.upper()] + 0.25)
                 success_chars.add(letter.upper())
             input_index += 1
 
