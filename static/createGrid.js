@@ -1,14 +1,8 @@
-function createAlphabetGrid() {
+function createAlphabetGrid(scores) {
     const alphabetGrid = document.getElementById('alphabet-grid');
+    while (alphabetGrid.firstChild)
+        alphabetGrid.removeChild(alphabetGrid.firstChild);
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-
-    // Define progress values for each letter (0% to 100%)
-    const progressValues = {
-        A: 25,
-        B: 50,
-        C: 75,
-        // Add progress values for other letters as needed
-    };
 
     for (let i = 0; i < alphabet.length; i++) {
         const letter = alphabet[i];
@@ -25,10 +19,10 @@ function createAlphabetGrid() {
         progressBar.classList.add('progress-bar');
 
         // Get the progress value for the current letter
-        const progressValue = progressValues[letter] || 0; // Default to 0 if not defined
+        const progressValue = scores[letter];
 
         // Set the width of the progress bar based on the progress value
-        progressBar.style.width = `${progressValue}%`;
+        progressBar.style.width = `${progressValue * 100}%`;
 
         // Append the progress bar to its container
         progressBarContainer.appendChild(progressBar);
@@ -38,13 +32,3 @@ function createAlphabetGrid() {
         alphabetGrid.appendChild(gridItem);
     }
 }
-
-// Call the function to create and insert grid items with progress bars
-createAlphabetGrid();
-
-
-
-
-
-
-
