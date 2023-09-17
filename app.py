@@ -4,11 +4,19 @@ import cv2
 import easyocr
 import numpy as np
 from flask import Flask, request
+from flask_cors import CORS
 
 import sample_gen
 
 app = Flask(__name__)
+app.debug = True
 reader = easyocr.Reader(['en'])
+CORS(app)
+
+
+@app.route('/')
+def index():
+    return app.send_static_file('index.html')
 
 
 @app.route('/get_sample', methods=['POST'])
@@ -26,9 +34,8 @@ def get_sample():
 
 @app.route('/submit_canvas', methods=['POST'])
 def submit_canvas():
-    data = request.get_json()
-    canvas = data["canvas"]
-    sample: str = data["sample"]
+    canvas = request.files['canvas'].read()
+    sample: str = request.get_json()["sample"]
     trimmed_sample = sample.replace(" ", "")
 
     recognized_input = recognize_canvas(canvas)
