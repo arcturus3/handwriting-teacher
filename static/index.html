@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Handwriter 200</title>
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="/static/style.css" />
 </head>
 
 <body>
@@ -13,8 +13,8 @@
         <h1>HANDWRITER IMPROVER 2000</h1>
     </header>
     <nav>
-        <a href="instructions.html">Instructions</a>
-        <a href="about.html">About</a>
+        <a href="/static/instructions.html">Instructions</a>
+        <a href="/static/about.html">About</a>
     </nav>
     <div class="pageLayout">
         <div class="left">
@@ -25,7 +25,7 @@
                 <button type="submit" class = "inputButton" onclick="submit()">Submit</button>
             </div>
             <input id = "fileInput" type="file"  accept=".jpg, .jpeg" style="display: none;">
-            
+
 
             <!-- Here is where we update the user on the process -->
             <h4>Readability Score: </h4>
@@ -41,8 +41,8 @@
     </div>
     <!-- Add your HTML content here -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
-    <script src="main.js"></script>
-    <script src="createGrid.js"></script>
+    <script src="/static/main.js"></script>
+    <script src="/static/createGrid.js"></script>
 </body>
 
 </html>
