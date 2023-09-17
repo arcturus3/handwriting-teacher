@@ -21,8 +21,13 @@ function createAlphabetGrid(scores) {
         // Get the progress value for the current letter
         const progressValue = scores[letter];
 
+
         // Set the width of the progress bar based on the progress value
         progressBar.style.width = `${progressValue * 100}%`;
+
+        if(progressValue >= 1){
+            progressBar.style.backgroundColor = "gold";
+        }
 
         // Append the progress bar to its container
         progressBarContainer.appendChild(progressBar);
