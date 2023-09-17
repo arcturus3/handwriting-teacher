@@ -11,9 +11,7 @@ cmake==3.27.4.1
 easyocr==1.7.1
 filelock==3.12.4
 Flask==2.3.3
-Flask-Cors==4.0.0
 frozenlist==1.4.0
-gprofiler-official==1.0.0
 idna==3.4
 imageio==2.31.3
 itsdangerous==2.1.2
@@ -23,7 +21,6 @@ lit==16.0.6
 MarkupSafe==2.1.3
 mpmath==1.3.0
 multidict==6.0.4
-mygene==3.2.2
 networkx==3.1
 ninja==1.11.1
 numpy==1.26.0
@@ -39,17 +36,11 @@ nvidia-cusparse-cu11==11.7.4.91
 nvidia-nccl-cu11==2.14.3
 nvidia-nvtx-cu11==11.7.91
 openai==0.28.0
-opencv-python==4.8.0.76
 opencv-python-headless==4.8.0.76
 packaging==23.1
-pandas==2.1.0
 Pillow==10.0.1
-platformdirs==3.10.0
-pooch==1.7.0
 pyclipper==1.3.0.post5
 python-bidi==0.4.2
-python-dateutil==2.8.2
-pytz==2023.3.post1
 PyWavelets==1.4.1
 PyYAML==6.0.1
 requests==2.31.0
@@ -64,7 +55,6 @@ torchvision==0.15.2
 tqdm==4.66.1
 triton==2.0.0
 typing_extensions==4.7.1
-tzdata==2023.3
 urllib3==2.0.4
 Werkzeug==2.3.7
 yarl==1.9.2
