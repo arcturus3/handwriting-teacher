@@ -48,8 +48,8 @@ def submit_canvas():
 
 
 def recognize_canvas(image_data) -> list[tuple[str, float]]:
-    img = cv2.imread(image_data)
-    result = reader.readtext(img)
+    # img = cv2.imread(image_data)
+    result = reader.readtext(image_data)
     return [(text, score) for each in result for text, score in each[1:]]
 
 
