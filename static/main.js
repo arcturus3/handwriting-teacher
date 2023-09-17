@@ -40,6 +40,7 @@ function submit(firstTime) {
 
   const formData = new FormData();
   const proccesselement = document.getElementById("statusText");
+  const feedbackElement = document.getElementById("feedbackText");
   if (!firstTime) {
     proccesselement.textContent = "Submission Accepted";
   }
@@ -63,7 +64,12 @@ function submit(firstTime) {
           if (!firstTime) {
             proccesselement.textContent = "Updating Character Scores...";
           }
-          return createAlphabetGrid(scores);
+          if(scores["successful"] != undefined && scores["successful"] != ''){
+            console.log(scores["successful"]);
+            feedbackElement.textContent = "Great job with these letters: " + scores["successful"];
+          }
+          
+          return createAlphabetGrid(scores['scores']);
         })
         .then(() => {
           if (!firstTime) {
