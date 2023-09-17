@@ -6,7 +6,9 @@ import numpy as np
 from flask import Flask, request
 from flask_cors import CORS
 
+
 import sample_gen
+from align import align as check_text_presence
 
 app = Flask(__name__)
 app.debug = True
@@ -34,8 +36,10 @@ def get_sample():
 
 @app.route('/submit_canvas', methods=['POST'])
 def submit_canvas():
-    canvas = request.files['canvas'].read()
-    sample: str = request.get_json()["sample"]
+    print(request)
+    canvas = request.files['imageFile'].read()
+
+    sample: str = request.form["sample"]
     trimmed_sample = sample.replace(" ", "")
 
     recognized_input = recognize_canvas(canvas)
@@ -68,5 +72,4 @@ def generate_score(recognized_input: list[tuple[str, float]], trimmed_sample: st
     return scoring
 
 
-def check_text_presence(trimmed_input: str, trimmed_sample: str) -> list[bool]:
-    pass
+app.run()
