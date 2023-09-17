@@ -4,7 +4,6 @@ import cv2
 import easyocr
 import numpy as np
 from flask import Flask, request
-from flask_cors import CORS
 
 import sample_gen
 from align import align as check_text_presence
@@ -12,7 +11,6 @@ from align import align as check_text_presence
 app = Flask(__name__)
 app.debug = True
 reader = easyocr.Reader(['en'])
-CORS(app)
 
 
 @app.route('/')
