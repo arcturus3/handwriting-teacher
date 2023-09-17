@@ -4,13 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Handwriter 200</title>
+    <title>Handwriting Teacher</title>
     <link rel="stylesheet" href="/static/style.css" />
 </head>
 
 <body>
     <header>
-        <h1>HANDWRITER IMPROVER 2000</h1>
+        <h1>HANDWRITING TEACHER</h1>
     </header>
     <nav>
         <a href="/static/instructions.html">Instructions</a>
@@ -18,18 +18,18 @@
     </nav>
     <div class="pageLayout">
         <div class="left">
-            <h3>Write the Following: <em>Elliot</em></h3>
+            <h3>Write the Following: <em id="sample"> </em></h3>
             <div id="canvasHolder"></div>
-            <div class = "buttonHolder">
-                <button id = "uploadButton" class = "inputButton" type="submit" onclick="uploadImage()">Upload .jpg</button>
-                <button type="submit" class = "inputButton" onclick="submit()">Submit</button>
+            <div class="buttonHolder">
+                <button id="uploadButton" class="inputButton" type="submit" onclick="uploadImage()">Upload .jpg</button>
+                <button type="submit" class="inputButton" onclick="submit()">Submit</button>
             </div>
-            <input id = "fileInput" type="file"  accept=".jpg, .jpeg" style="display: none;">
+            <input id="fileInput" type="file" accept=".jpg, .jpeg" style="display: none;">
 
 
             <!-- Here is where we update the user on the process -->
-            <h4>Readability Score: </h4>
-            <p>Make sure you dot your i's and cross your t's!!!</p>
+            <h4>Status: <span id="statusText"> </span></h4>
+            <p id = "feedbackText">Make sure you dot your i's and cross your t's!!!</p>
         </div>
         <div class="right">
             <h2>Character Mastery</h2>
@@ -41,8 +41,8 @@
     </div>
     <!-- Add your HTML content here -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
-    <script src="/static/main.js"></script>
     <script src="/static/createGrid.js"></script>
+    <script src="/static/main.js"></script>
 </body>
 
 </html>
