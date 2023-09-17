@@ -1,12 +1,11 @@
 from collections import defaultdict
-from typing import List, Tuple, Any
 
 import cv2
 import easyocr
 import numpy as np
 from flask import Flask, request
 
-import sample
+import sample_gen
 
 app = Flask(__name__)
 reader = easyocr.Reader(['en'])
@@ -22,7 +21,7 @@ def get_sample():
         letters.append(letter)
         weights.append(1 / score)
     prioritized_letters = np.random.choice(letters, 5, replace=False, p=weights)
-    return sample.generate_samples(5, word_count, prioritized_letters)
+    return sample_gen.generate_samples(5, word_count, prioritized_letters)
 
 
 @app.route('/submit_canvas', methods=['POST'])
