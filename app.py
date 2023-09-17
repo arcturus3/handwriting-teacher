@@ -35,9 +35,9 @@ def get_sample():
 
 @app.route("/submit_canvas", methods=["POST"])
 def submit_canvas():
-    trimmed_sample = "" #adding this initializer and the if statement for the case that nothing is there yet
+    trimmed_sample = ""  # adding this initializer and the if statement for the case that nothing is there yet
     canvas = request.files["imageFile"].read()
-    if(current_sample):
+    if (current_sample):
         trimmed_sample = current_sample.replace(" ", "")
 
     recognized_input = recognize_canvas(canvas)
@@ -56,7 +56,7 @@ def recognize_canvas(image_data) -> list[tuple[str, float]]:
 
 
 def generate_score(
-    recognized_input: list[tuple[str, float]], trimmed_sample: str
+        recognized_input: list[tuple[str, float]], trimmed_sample: str
 ) -> dict[str, int]:
     trimmed_input = "".join(text for text, _ in recognized_input)
     confidence_for_each_input_letter = [
@@ -66,16 +66,18 @@ def generate_score(
     text_presence = align(trimmed_sample, trimmed_input)
 
     confidence_threshold = 0.6
+    practice_threshold = 4
 
     success_chars = set()
     input_index = 0
     for i, letter in enumerate(trimmed_sample):
         if text_presence[i]:
             if letter.upper() in scores and confidence_for_each_input_letter[input_index] > confidence_threshold:
-                scores[letter.upper()] = min(1, scores[letter.upper()] + 0.25)
+                scores[letter.upper()] = min(1, scores[letter.upper()] + 1 / 4)
                 success_chars.add(letter.upper())
             input_index += 1
 
     return list(success_chars)
+
 
 app.run()
