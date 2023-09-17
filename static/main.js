@@ -61,7 +61,8 @@ function submit() {
                 // Handle errors
             }
         }).then((json)=>{
-            console.log(json)
+            //this gets our response!
+
         })
         .catch((error) => {
             console.log(error)
