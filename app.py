@@ -42,11 +42,12 @@ def submit_canvas():
 
     recognized_input = recognize_canvas(canvas)
 
-    generate_score(recognized_input, trimmed_sample)
+    success_chars = generate_score(recognized_input, trimmed_sample)
 
-    print(recognized_input, trimmed_sample)
-
-    return scores
+    return {
+        'scores': scores,
+        'successful': success_chars
+    }
 
 
 def recognize_canvas(image_data) -> list[tuple[str, float]]:
@@ -66,12 +67,15 @@ def generate_score(
 
     confidence_threshold = 0.6
 
+    success_chars = set()
     input_index = 0
     for i, letter in enumerate(trimmed_sample):
         if text_presence[i]:
             if letter.upper() in scores and confidence_for_each_input_letter[input_index] > confidence_threshold:
                 scores[letter.upper()] = min(1, scores[letter.upper()] + 0.1)
+                success_chars.add(letter.upper())
             input_index += 1
 
+    return list(success_chars)
 
 app.run()
