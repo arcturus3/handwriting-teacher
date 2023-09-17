@@ -1,4 +1,7 @@
+import random
+
 import easyocr
+import numpy as np
 from flask import Flask, render_template, request, send_file, make_response
 import cv2
 import sample
@@ -7,13 +10,17 @@ app = Flask(__name__)
 reader = easyocr.Reader(['en'])
 
 
-@app.route('/get_sample')
+@app.route('/get_sample', methods=['POST'])
 def get_sample():
-    return sample.generate_samples(5, 5, )
-
-
-def generate_sample(word_count: int, letter_weights: dict[str, float]) -> str:
-    pass
+    scores = request.get_json()["scores"]
+    word_count = request.get_json()["word_count"] or 1
+    letters = []
+    weights = []
+    for letter, score in scores:
+        letters.append(letter)
+        weights.append(1 / score)
+    prioritized_letters = np.random.choice(letters, 5, replace=False, p=weights)
+    return sample.generate_samples(5, word_count, prioritized_letters)
 
 
 @app.route('/submit_canvas', methods=['POST'])
@@ -37,18 +44,11 @@ def recognize_canvas(matrix: list[list[float]]) -> dict[str, float]:
     # for each in result:
     #     for text, score in each[1:]:
     #         combinations.append((text, score))
+
+
 # Still working this out
-    #
-    # return possible_combinations
-
-
-print(recognize_canvas([
-    [0, 1, 0, 0, 0],
-    [0, 1, 0, 0, 0],
-    [0, 1, 0, 0, 0],
-    [0, 1, 0, 0, 0],
-    [0, 1, 1, 1, 0]
-]))
+#
+# return possible_combinations
 
 
 def generate_score(possible_combinations, sample):
