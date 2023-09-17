@@ -1,9 +1,11 @@
-import random
+from collections import defaultdict
+from typing import List, Tuple, Any
 
+import cv2
 import easyocr
 import numpy as np
-from flask import Flask, render_template, request, send_file, make_response
-import cv2
+from flask import Flask, request
+
 import sample
 
 app = Flask(__name__)
@@ -30,33 +32,35 @@ def submit_canvas():
     sample: str = data["sample"]
     trimmed_sample = sample.replace(" ", "")
 
-    translated_text = recognize_canvas(data)
+    recognized_input = recognize_canvas(canvas)
 
-    return generate_score(translated_text, trimmed_sample)
+    return generate_score(recognized_input, trimmed_sample)
 
 
-def recognize_canvas(matrix: list[list[float]]) -> dict[str, float]:
-    img = cv2.imread('input_2.jpg')
+def recognize_canvas(image_data) -> list[tuple[str, float]]:
+    img = cv2.imread(image_data)
     result = reader.readtext(img)
-
-    # Create a dictionary of possible combinations and their confidence scores
-    # combinations = []`
-    # for each in result:
-    #     for text, score in each[1:]:
-    #         combinations.append((text, score))
+    return [(text, score) for each in result for text, score in each[1:]]
 
 
-# Still working this out
-#
-# return possible_combinations
+def generate_score(recognized_input: list[tuple[str, float]], trimmed_sample: str) -> dict[str, int]:
+    trimmed_input = "".join(text for text, _ in recognized_input)
+    confidence_for_each_input_letter = [confidence for text, confidence in recognized_input for _ in text]
+
+    text_presence = check_text_presence(trimmed_input, trimmed_sample)
+
+    confidence_threshold = 0.6
+
+    scoring = defaultdict(int)
+    input_index = 0
+    for i, letter in trimmed_sample:
+        if text_presence[i]:
+            input_index += 1
+            if confidence_for_each_input_letter[input_index] > confidence_threshold:
+                scoring[letter] += 1
+
+    return scoring
 
 
-def generate_score(possible_combinations, sample):
-    score_list = []
-    for l in sample:
-        if l in possible_combinations:
-            score_list.append((l, possible_combinations[l]))
-        else:
-            score_list.append((l, 0))
-
-    return score_list
+def check_text_presence(trimmed_input: str, trimmed_sample: str) -> list[bool]:
+    pass
