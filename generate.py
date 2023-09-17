@@ -1,8 +1,7 @@
 import os
 import openai
 
-#openai.api_key = os.getenv('OPENAI_API_KEY')
-openai.api_key = "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"
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
 def generate_prompt(word_count: int, targets: list[str]) -> str:
     targets = ', '.join(targets)
