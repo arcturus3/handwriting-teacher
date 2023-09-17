@@ -64,7 +64,7 @@ function submit(firstTime) {
           if (!firstTime) {
             proccesselement.textContent = "Updating Character Scores...";
           }
-          if(scores["successful"] != undefined && scores["successful"] != ''){
+          if(scores["successful"] != undefined){
             console.log(scores["successful"]);
             feedbackElement.textContent = "Great job with these letters: " + scores["successful"];
           }
