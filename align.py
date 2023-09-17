@@ -1,8 +1,9 @@
 from Bio import Align
 
+
 def align(sample, pred):
     aligner = Align.PairwiseAligner()
-    aligner.open_gap_score = -0.5 # prefer mismatches to gaps
+    aligner.open_gap_score = -0.5  # prefer mismatches to gaps
     alignments = aligner.align(sample, pred)
     alignment = alignments[0]
     success = [False] * len(sample)
