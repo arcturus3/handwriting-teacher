@@ -60,9 +60,9 @@ def generate_score(recognized_input: list[tuple[str, float]], trimmed_sample: st
     input_index = 0
     for i, letter in enumerate(trimmed_sample):
         if text_presence[i]:
-            input_index += 1
             if confidence_for_each_input_letter[input_index] > confidence_threshold:
                 scoring[letter] += 1
+            input_index += 1
 
     return scoring
 

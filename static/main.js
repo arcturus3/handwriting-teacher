@@ -56,9 +56,12 @@ function submit() {
             // Handle the response here
             if (response.ok) {
                 // Success
+                return response.json();
             } else {
                 // Handle errors
             }
+        }).then((json)=>{
+            console.log(json)
         })
         .catch((error) => {
             console.log(error)
