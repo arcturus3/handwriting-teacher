@@ -33,14 +33,6 @@ function submit() {
 
     let canvasElement = document.getElementById("defaultCanvas0");
     let dataURL = canvasElement.toDataURL("image/jpeg");
-
-    // Create a link element to download the image
-    let a = document.createElement("a");
-    a.href = dataURL;
-    a.download = "your_image.jpg"; // Specify the filename
-
-    // Trigger a click event to download the image
-    a.click();
     clear();
     imageUploaded = false;
     background(220);
