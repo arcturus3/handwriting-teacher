@@ -1,7 +1,8 @@
 from Bio import Align
 
-
-def align(sample, pred):
+def align(sample: str, pred: str) -> list[bool]:
+    if not pred or not sample:
+        return [False] * len(sample)
     aligner = Align.PairwiseAligner()
     aligner.open_gap_score = -0.5  # prefer mismatches to gaps
     alignments = aligner.align(sample, pred)
@@ -18,5 +19,3 @@ def align(sample, pred):
             if sample[sample_idx] == pred[pred_idx]:
                 success[sample_idx] = True
     return success
-
-# print(align('hello there arti', 'hello thistle arti'))
