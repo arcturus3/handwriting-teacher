@@ -4,6 +4,9 @@ let cWidth = document.getElementById("canvasHolder").clientWidth;
 let cHeight = document.getElementById("canvasHolder").clientHeight;
 let canvas;
 
+const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const initialScores = Object.fromEntries([...alphabet].map(c => [c, 0]));
+
 function setup() {
     canvas = createCanvas(cWidth, cHeight);
     // Set the canvas size as per your requirements
@@ -29,8 +32,6 @@ function mouseReleased() {
 }
 
 function submit() {
-
-
     let canvasElement = document.getElementById("defaultCanvas0");
     let dataURL = canvasElement.toDataURL("image/jpeg");
     clear();
@@ -43,30 +44,16 @@ function submit() {
         .then((response) => response.blob())
         .then((blob) => {
             formData.append("imageFile", blob);
-            formData.append("sample", "Elliot");
-
-            return fetch("/submit_canvas", {
-                method: "POST",
-                body: formData,
-                enctype: "multipart/form-data",
-                // Note: No need to set Content-type or Content-Length headers for FormData
-            });
+        fetch("/submit_canvas", {
+            method: "POST",
+            body: formData,
+            enctype: "multipart/form-data",
+            // Note: No need to set Content-type or Content-Length headers for FormData
         })
-        .then((response) => {
-            // Handle the response here
-            if (response.ok) {
-                // Success
-                return response.json();
-            } else {
-                // Handle errors
-            }
-        }).then((json)=>{
-            //this gets our response!
-
-        })
-        .catch((error) => {
-            console.log(error)
-        });
+            .then(res => res.json())
+            .then(scores => createAlphabetGrid(scores))
+            .then(() => fetchSample());
+    });
 }
 
 function uploadImage() {
@@ -102,3 +89,13 @@ function uploadImage() {
         }
     });
 }
+
+function fetchSample() {
+    const sampleText = document.getElementById('sample');
+    fetch('/sample')
+        .then(res => res.text())
+        .then(sample => sampleText.innerHTML = sample);
+}
+
+fetchSample();
+createAlphabetGrid(initialScores);
