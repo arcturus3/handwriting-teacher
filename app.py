@@ -1,39 +1,39 @@
 from collections import defaultdict
-
-import easyocr
-import numpy as np
+from string import ascii_uppercase
 from flask import Flask, request
-
-import sample_gen
-from align import align as check_text_presence
+import numpy as np
+import easyocr
+from align import align
+from generate import generate_samples
 
 app = Flask(__name__)
 app.debug = True
-reader = easyocr.Reader(['en'])
+reader = easyocr.Reader(["en"])
+
+scores = {c: 0 for c in ascii_uppercase}
 
 
-@app.route('/')
+@app.route("/")
 def index():
-    return app.send_static_file('index.html')
+    return app.send_static_file("index.html")
 
 
-@app.route('/get_sample', methods=['POST'])
+@app.route('/sample', methods=['GET'])
 def get_sample():
-    scores = request.get_json()["scores"]
-    word_count = request.get_json()["word_count"] or 1
-    letters = []
-    weights = []
-    for letter, score in scores:
-        letters.append(letter)
-        weights.append(1 / score)
-    prioritized_letters = list(np.random.choice(letters, 5, replace=False, p=weights))
-    return sample_gen.generate_samples(5, word_count, prioritized_letters)
+    chars = np.array(list(scores.keys()))
+    weights = np.array([1 - score for score in scores.values()])
+    if np.sum(weights) == 0:
+        weights = np.ones_like(weights) / weights.shape[0]
+    else:
+        weights = weights / np.sum(weights)
+    weighted_chars = list(np.random.choice(chars, 4, replace=False, p=weights))
+    samples = generate_samples(1, 4, weighted_chars)
+    return samples[0]
 
 
-@app.route('/submit_canvas', methods=['POST'])
+@app.route("/submit_canvas", methods=["POST"])
 def submit_canvas():
-    print(request)
-    canvas = request.files['imageFile'].read()
+    canvas = request.files["imageFile"].read()
 
     sample: str = request.form["sample"]
     trimmed_sample = sample.replace(" ", "")
@@ -48,11 +48,15 @@ def recognize_canvas(image_data) -> list[tuple[str, float]]:
     return [(each[1], each[2]) for each in result]
 
 
-def generate_score(recognized_input: list[tuple[str, float]], trimmed_sample: str) -> dict[str, int]:
+def generate_score(
+    recognized_input: list[tuple[str, float]], trimmed_sample: str
+) -> dict[str, int]:
     trimmed_input = "".join(text for text, _ in recognized_input)
-    confidence_for_each_input_letter = [confidence for text, confidence in recognized_input for _ in text]
+    confidence_for_each_input_letter = [
+        confidence for text, confidence in recognized_input for _ in text
+    ]
 
-    text_presence = check_text_presence(trimmed_input, trimmed_sample)
+    text_presence = align(trimmed_sample, trimmed_input)
 
     confidence_threshold = 0.6
 

@@ -1,14 +1,13 @@
 from Bio import Align
 
-
-def align(pred, sample):
+def align(sample: str, pred: str) -> list[bool]:
+    success = [False] * len(sample)
     if not pred or not sample:
-        return [False] * len(sample)
+        return success
     aligner = Align.PairwiseAligner()
     aligner.open_gap_score = -0.5  # prefer mismatches to gaps
     alignments = aligner.align(sample, pred)
     alignment = alignments[0]
-    success = [False] * len(sample)
     sample_groups, pred_groups = alignment.aligned
     for group_idx in range(len(sample_groups)):
         sample_group = sample_groups[group_idx]

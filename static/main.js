@@ -106,3 +106,12 @@ function uploadImage() {
         }
     });
 }
+
+function fetchSample() {
+    const sampleText = document.getElementById('sample');
+    fetch('/sample')
+        .then(res => res.text())
+        .then(sample => sampleText.innerHTML = sample);
+}
+
+fetchSample();
