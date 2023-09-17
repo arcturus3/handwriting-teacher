@@ -4,6 +4,7 @@ body, html {
     margin: 0;
     padding: 0;
     height: 100%;
+    width: 100%;
 }
 
 header {
@@ -11,8 +12,14 @@ header {
     color: #fff;
     text-align: center;
     padding: 10px 0;
+    width: 100%;
 }
 
+#defaultCanvas0 {
+    max-width: 100%; /* Set the canvas width to be responsive */
+    height: auto; /* Allow the canvas to scale proportionally */
+    display: block; /* Ensure the canvas behaves as expected */
+}
 h1{
     text-align: center;
 }
@@ -32,10 +39,6 @@ nav a {
 
 .pageLayout {
     display: flex;
-    /* flex: 1;
-    flex-direction: row;
-    align-self: stretch;
-    align-items: stretch; */
     height: 100%;
 }
 
@@ -139,4 +142,37 @@ nav a {
     gap: 7px;
     flex-direction: row;
     justify-content: start;
+}
+
+/* for instructions */
+.basic {
+    text-align: center;
+    margin: 5%;
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    color: #333; /* Text color */
+    background-color: #f9f9f9; /* Background color */
+    padding: 10px; /* Padding around the instructions */
+    border: 1px solid #ddd; /* Border */
+    border-radius: 5px; /* Rounded corners */
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); /* Box shadow for a subtle elevation effect */
+}
+
+/* attemt at responsiveness */
+@media (max-width: 1300px) {
+    /* Style changes for screens less than 1200 pixels wide */
+    .pageLayout {
+        display: flex;
+        flex-direction: column; /* Change to a one-column layout */
+        align-items: center; /* Center the content vertically */
+        padding: 20px;
+    }
+
+    .left {
+        width: 100%; /* Full width for the left column */
+    }
+
+    .right {
+        width: 100%; /* Full width for the right column */
+    }
 }

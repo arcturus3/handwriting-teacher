@@ -35,9 +35,10 @@ def get_sample():
 
 @app.route("/submit_canvas", methods=["POST"])
 def submit_canvas():
+    trimmed_sample = "" #adding this initializer and the if statement for the case that nothing is there yet
     canvas = request.files["imageFile"].read()
-
-    trimmed_sample = current_sample.replace(" ", "")
+    if(current_sample):
+        trimmed_sample = current_sample.replace(" ", "")
 
     recognized_input = recognize_canvas(canvas)
 
