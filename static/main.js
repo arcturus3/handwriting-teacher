@@ -17,9 +17,7 @@ function draw() {
         stroke(0); // Set the stroke color (black)
         strokeWeight(7); // Set the stroke thickness
         line(pmouseX, pmouseY, mouseX, mouseY); // Draw a line from the previous mouse position to the current position
-    } else if (imageUploaded) {
-        console.log("we should display an image");
-    }
+    } 
 }
 
 function mousePressed() {
