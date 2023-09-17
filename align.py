@@ -1,6 +1,7 @@
 from Bio import Align
 
-def align(sample: str, pred: str) -> list[bool]:
+
+def align(pred, sample):
     if not pred or not sample:
         return [False] * len(sample)
     aligner = Align.PairwiseAligner()

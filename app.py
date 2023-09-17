@@ -6,7 +6,6 @@ import numpy as np
 from flask import Flask, request
 from flask_cors import CORS
 
-
 import sample_gen
 from align import align as check_text_presence
 
@@ -30,7 +29,7 @@ def get_sample():
     for letter, score in scores:
         letters.append(letter)
         weights.append(1 / score)
-    prioritized_letters = np.random.choice(letters, 5, replace=False, p=weights)
+    prioritized_letters = list(np.random.choice(letters, 5, replace=False, p=weights))
     return sample_gen.generate_samples(5, word_count, prioritized_letters)
 
 
@@ -48,9 +47,8 @@ def submit_canvas():
 
 
 def recognize_canvas(image_data) -> list[tuple[str, float]]:
-    # img = cv2.imread(image_data)
     result = reader.readtext(image_data)
-    return [(text, score) for each in result for text, score in each[1:]]
+    return [(each[1], each[2]) for each in result]
 
 
 def generate_score(recognized_input: list[tuple[str, float]], trimmed_sample: str) -> dict[str, int]:
@@ -63,7 +61,7 @@ def generate_score(recognized_input: list[tuple[str, float]], trimmed_sample: st
 
     scoring = defaultdict(int)
     input_index = 0
-    for i, letter in trimmed_sample:
+    for i, letter in enumerate(trimmed_sample):
         if text_presence[i]:
             input_index += 1
             if confidence_for_each_input_letter[input_index] > confidence_threshold:
