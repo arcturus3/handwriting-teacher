@@ -1,6 +1,5 @@
 from collections import defaultdict
 
-import cv2
 import easyocr
 import numpy as np
 from flask import Flask, request
