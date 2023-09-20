@@ -1,5 +1,6 @@
 from Bio import Align
 
+
 def align(sample: str, pred: str) -> list[bool]:
     success = [False] * len(sample)
     if not pred or not sample:

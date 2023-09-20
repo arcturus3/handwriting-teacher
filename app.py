@@ -10,7 +10,7 @@ app.debug = True
 reader = easyocr.Reader(["en"])
 
 scores = {c: 0 for c in ascii_uppercase}
-current_sample = None
+current_sample = ""
 
 
 @app.route("/")
@@ -35,11 +35,8 @@ def get_sample():
 
 @app.route("/submit_canvas", methods=["POST"])
 def submit_canvas():
-    trimmed_sample = ""  # adding this initializer and the if statement for the case that nothing is there yet
     canvas = request.files["imageFile"].read()
-    if (current_sample):
-        trimmed_sample = current_sample.replace(" ", "")
-
+    trimmed_sample = current_sample.replace(" ", "")
     recognized_input = recognize_canvas(canvas)
 
     success_chars = generate_score(recognized_input, trimmed_sample)
@@ -57,7 +54,7 @@ def recognize_canvas(image_data) -> list[tuple[str, float]]:
 
 def generate_score(
         recognized_input: list[tuple[str, float]], trimmed_sample: str
-) -> dict[str, int]:
+) -> list[str]:
     trimmed_input = "".join(text for text, _ in recognized_input)
     confidence_for_each_input_letter = [
         confidence for text, confidence in recognized_input for _ in text
@@ -73,11 +70,11 @@ def generate_score(
     for i, letter in enumerate(trimmed_sample):
         if text_presence[i]:
             if letter.upper() in scores and confidence_for_each_input_letter[input_index] > confidence_threshold:
-                scores[letter.upper()] = min(1, scores[letter.upper()] + 1 / 4)
+                scores[letter.upper()] = min(1, scores[letter.upper()] + 1 / practice_threshold)
                 success_chars.add(letter.upper())
             input_index += 1
 
     return list(success_chars)
 
 
-app.run()
+app.run(port=5123)
