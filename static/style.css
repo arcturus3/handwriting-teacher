@@ -100,8 +100,6 @@ nav a {
 }
 /* Style for the progress bar container */
 .progress-bar-container {
-    margin-left: 5px;
-    margin-right: 10px;
     margin: 10px;
     width: 100%;
     height: 10px; /* Adjust the height of the progress bar */
