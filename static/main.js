@@ -39,7 +39,7 @@ function draw() {
     }
 }
 
-var keys = {37: 1, 38: 1, 39: 1, 40: 1};
+const keys = {37: 1, 38: 1, 39: 1, 40: 1};
 
 function preventDefault(e) {
     e.preventDefault();
@@ -127,7 +127,7 @@ function submit(firstTime) {
                     if (!firstTime) {
                         proccesselement.textContent = "Updating Character Scores...";
                     }
-                    if (scores["successful"] != undefined) {
+                    if (scores["successful"] !== undefined) {
                         console.log(scores["successful"]);
                         feedbackElement.textContent = "Great job with these letters: " + scores["successful"];
                     }

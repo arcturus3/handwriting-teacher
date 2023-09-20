@@ -1,7 +1,9 @@
 function createAlphabetGrid(scores) {
     const alphabetGrid = document.getElementById('alphabet-grid');
+
     while (alphabetGrid.firstChild)
         alphabetGrid.removeChild(alphabetGrid.firstChild);
+
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
     for (let i = 0; i < alphabet.length; i++) {
@@ -25,7 +27,7 @@ function createAlphabetGrid(scores) {
         // Set the width of the progress bar based on the progress value
         progressBar.style.width = `${progressValue * 100}%`;
 
-        if(progressValue >= 1){
+        if (progressValue >= 1) {
             progressBar.style.backgroundColor = "gold";
         }
 
