@@ -1,12 +1,13 @@
 import os
 import openai
 
-openai.api_key = "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"
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
 
 def generate_prompt(word_count: int, targets: list[str]) -> str:
     targets = ', '.join(targets)
-    return f'Write a {word_count} word sentence with a high proportion of the characters: {targets}. Limit your sentence to 10 characters or less.'
+    return (f'Write a {word_count} word sentence with a high proportion of the characters: {targets}. Limit your '
+            f'sentence to 10 characters or less.')
 
 
 def generate_samples(sample_count: int, word_count: int, targets: list[str]) -> list[str]:
