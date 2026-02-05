@@ -4,38 +4,106 @@ let cWidth = document.getElementById("canvasHolder").clientWidth;
 let cHeight = document.getElementById("canvasHolder").clientHeight;
 let canvas;
 
-const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const initialScores = Object.fromEntries([...alphabet].map((c) => [c, 0]));
+let currentScores = {};
 
-let pointerDown = false
+let pointerDown = false;
+
+// Initialize scores from alphabet
+function initScores(alphabet) {
+    const scores = {};
+    for (const char of alphabet) {
+        scores[char] = 0;
+    }
+    return scores;
+}
+
+// Update RTL direction for sample text
+function updateTextDirection(lang) {
+    const sampleElement = document.getElementById('sample');
+    sampleElement.style.direction = lang === 'ar' ? 'rtl' : 'ltr';
+}
+
+// Fetch current language settings from server
+async function fetchLanguageSettings() {
+    const response = await fetch('/language');
+    const data = await response.json();
+    currentAlphabet = data.alphabet;
+    setCurrentLang(data.language);
+    updateTextDirection(data.language);
+    return data;
+}
+
+// Switch language
+async function switchLanguage(lang) {
+    // Immediately clear grid and show loading state
+    document.getElementById('alphabet-grid').innerHTML = '<div class="loading">Loading...</div>';
+
+    // Update active button immediately
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === lang);
+    });
+
+    const response = await fetch('/language', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language: lang })
+    });
+    const data = await response.json();
+
+    currentAlphabet = data.alphabet;
+    currentScores = data.scores;
+    setCurrentLang(data.language);
+    updateTextDirection(data.language);
+
+    // Rebuild grid and fetch new sample
+    createAlphabetGrid(currentScores, currentAlphabet);
+    clear();
+    background(220);
+    fetchSample();
+}
+
+// Set up language button handlers and sync active state
+function setupLanguageButtons(activeLang = 'en') {
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === activeLang);
+        btn.addEventListener('click', () => {
+            switchLanguage(btn.dataset.lang);
+        });
+    });
+}
 
 function setup() {
     canvas = createCanvas(cWidth, cHeight);
-    // Set the canvas size as per your requirements
-    canvas.parent("canvasHolder"); // Attach the canvas to the HTML element with id "p5Canvas"
-    background(220); // Set the initial background color
-    submit(true);
+    canvas.parent("canvasHolder");
+    background(220);
+
+    // Initialize with server settings, then set up buttons
+    fetchLanguageSettings().then(data => {
+        setupLanguageButtons(data.language);
+        currentScores = initScores(currentAlphabet);
+        createAlphabetGrid(currentScores, currentAlphabet);
+        submit(true);
+    });
 
     const canvasElement = document.getElementById("defaultCanvas0");
     const startListener = window.PointerEvent ? 'pointerdown' : 'touchstart';
     const endListener = window.PointerEvent ? 'pointerup' : 'touchend';
     canvasElement.addEventListener(startListener, () => {
-        pointerDown = true
+        pointerDown = true;
     });
     canvasElement.addEventListener(endListener, () => {
-        pointerDown = false
+        pointerDown = false;
     });
     window.addEventListener("touchend", mouseReleased);
-    window.addEventListener("pointerup", mouseReleased); //weird hack, lol
-
+    window.addEventListener("pointerup", mouseReleased);
 }
 
 function draw() {
     fill(0);
     if (drawing && !imageUploaded) {
-        stroke(0); // Set the stroke color (black)
-        strokeWeight(7); // Set the stroke thickness
-        line(pmouseX, pmouseY, mouseX, mouseY); // Draw a line from the previous mouse position to the current position
+        stroke(0);
+        strokeWeight(7);
+        line(pmouseX, pmouseY, mouseX, mouseY);
     }
 }
 
@@ -52,7 +120,6 @@ function preventDefaultForScrollKeys(e) {
     }
 }
 
-// modern Chrome requires { passive: false } when adding event
 let supportsPassive = false;
 try {
     window.addEventListener("test", null, Object.defineProperty({}, 'passive', {
@@ -66,15 +133,13 @@ try {
 const wheelOpt = supportsPassive ? {passive: false} : false;
 const wheelEvent = 'onwheel' in document.createElement('div') ? 'wheel' : 'mousewheel';
 
-// call this to Disable
 function disableScroll() {
-    window.addEventListener('DOMMouseScroll', preventDefault, false); // older FF
-    window.addEventListener(wheelEvent, preventDefault, wheelOpt); // modern desktop
-    window.addEventListener('touchmove', preventDefault, wheelOpt); // mobile
+    window.addEventListener('DOMMouseScroll', preventDefault, false);
+    window.addEventListener(wheelEvent, preventDefault, wheelOpt);
+    window.addEventListener('touchmove', preventDefault, wheelOpt);
     window.addEventListener('keydown', preventDefaultForScrollKeys, false);
 }
 
-// call this to Enable
 function enableScroll() {
     window.removeEventListener('DOMMouseScroll', preventDefault, false);
     window.removeEventListener(wheelEvent, preventDefault, wheelOpt);
@@ -92,7 +157,6 @@ function mousePressed() {
 function mouseReleased() {
     drawing = false;
     enableScroll();
-
 }
 
 function submit(firstTime) {
@@ -115,7 +179,6 @@ function submit(firstTime) {
                 method: "POST",
                 body: formData,
                 enctype: "multipart/form-data",
-                // Note: No need to set Content-type or Content-Length headers for FormData
             })
                 .then((res) => {
                     if (!firstTime) {
@@ -123,16 +186,16 @@ function submit(firstTime) {
                     }
                     return res.json();
                 })
-                .then((scores) => {
+                .then((data) => {
                     if (!firstTime) {
                         proccesselement.textContent = "Updating Character Scores...";
                     }
-                    if (scores["successful"] !== undefined) {
-                        console.log(scores["successful"]);
-                        feedbackElement.textContent = "Great job with these letters: " + scores["successful"];
+                    if (data["successful"] !== undefined) {
+                        console.log(data["successful"]);
+                        feedbackElement.textContent = "Great job with these letters: " + data["successful"];
                     }
-
-                    return createAlphabetGrid(scores['scores']);
+                    currentScores = data['scores'];
+                    return createAlphabetGrid(currentScores, currentAlphabet);
                 })
                 .then(() => {
                     if (!firstTime) {
@@ -150,22 +213,19 @@ function uploadImage() {
     const fileInput = document.getElementById("fileInput");
     const uploadButton = document.getElementById("uploadButton");
 
-    // Create a link element to download the image
     uploadButton.addEventListener("click", () => {
-        fileInput.click(); // Trigger the file input when the button is clicked
+        fileInput.click();
     });
     fileInput.addEventListener("change", () => {
         const selectedFile = fileInput.files[0];
         if (selectedFile) {
             const reader = new FileReader();
             reader.onload = (e) => {
-                // Draw the image on the canvas
                 const canvas = document.getElementById("defaultCanvas0");
                 const context = canvas.getContext("2d");
 
                 const img = new Image();
                 img.onload = () => {
-                    //keep the aspect ratio reasonable
                     const newHeight = cHeight;
                     const newWidth = (img.width * cHeight) / img.height;
 
@@ -195,5 +255,3 @@ function fetchSample() {
         })
         .then((sample) => (sampleText.innerHTML = sample));
 }
-
-createAlphabetGrid(initialScores);

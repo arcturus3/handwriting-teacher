@@ -1,13 +1,25 @@
-function createAlphabetGrid(scores) {
+let currentAlphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+let currentLang = 'en';
+
+function createAlphabetGrid(scores, alphabet) {
+    if (alphabet) {
+        currentAlphabet = alphabet;
+    }
+
     const alphabetGrid = document.getElementById('alphabet-grid');
 
     while (alphabetGrid.firstChild)
         alphabetGrid.removeChild(alphabetGrid.firstChild);
 
-    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    // Add RTL class for Arabic
+    if (currentLang === 'ar') {
+        alphabetGrid.classList.add('rtl');
+    } else {
+        alphabetGrid.classList.remove('rtl');
+    }
 
-    for (let i = 0; i < alphabet.length; i++) {
-        const letter = alphabet[i];
+    for (let i = 0; i < currentAlphabet.length; i++) {
+        const letter = currentAlphabet[i];
         const gridItem = document.createElement('div');
         gridItem.classList.add('alphabet-item');
         gridItem.textContent = letter;
@@ -21,8 +33,7 @@ function createAlphabetGrid(scores) {
         progressBar.classList.add('progress-bar');
 
         // Get the progress value for the current letter
-        const progressValue = scores[letter];
-
+        const progressValue = scores[letter] || 0;
 
         // Set the width of the progress bar based on the progress value
         progressBar.style.width = `${progressValue * 100}%`;
@@ -38,4 +49,8 @@ function createAlphabetGrid(scores) {
         gridItem.appendChild(progressBarContainer);
         alphabetGrid.appendChild(gridItem);
     }
+}
+
+function setCurrentLang(lang) {
+    currentLang = lang;
 }

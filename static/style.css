@@ -37,6 +37,43 @@ nav a {
     margin: 0 20px;
 }
 
+/* Language selector */
+.language-selector {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.lang-btn {
+    background-color: #f0f0f0;
+    color: #333;
+    border: 1px solid #ddd;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.lang-btn:hover {
+    background-color: #e0e0e0;
+}
+
+.lang-btn.active {
+    background-color: #007bff;
+    color: #fff;
+    border-color: #007bff;
+}
+
+/* Loading state */
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+    font-style: italic;
+}
+
 .pageLayout {
     display: flex;
     height: 100%;
@@ -83,6 +120,15 @@ nav a {
     grid-template-columns: repeat(5, 100px); /* Adjust the number and width of columns as needed */
     gap: 10px; /* Adjust the gap between grid items */
     justify-content: center; /* Center the grid horizontally */
+}
+
+/* RTL support for Arabic */
+.alphabet-container.rtl {
+    direction: rtl;
+}
+
+.alphabet-container.rtl .alphabet-item {
+    font-family: 'Arial', 'Noto Sans Arabic', sans-serif;
 }
 
 /* Style for each grid item (letter element) */

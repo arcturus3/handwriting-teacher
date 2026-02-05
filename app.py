@@ -1,6 +1,8 @@
 import os
-from string import ascii_uppercase
-from flask import Flask, request, session
+from dotenv import load_dotenv
+load_dotenv()
+
+from flask import Flask, request, session, jsonify
 import numpy as np
 import easyocr
 from align import align
@@ -8,13 +10,45 @@ from generate import generate_samples
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-prod')
-reader = easyocr.Reader(["en"])
+
+# Character sets for supported languages
+ALPHABETS = {
+    'en': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+    'ru': 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ',
+    'ar': 'ابتثجحخدذرزسشصضطظعغفقكلمنهوي',
+}
+
+LANGUAGE_NAMES = {
+    'en': 'English',
+    'ru': 'Russian',
+    'ar': 'Arabic',
+}
+
+# EasyOCR language codes
+EASYOCR_LANGS = {
+    'en': ['en'],
+    'ru': ['ru'],
+    'ar': ['ar'],
+}
+
+# Load all OCR readers at startup
+readers = {lang: easyocr.Reader(codes) for lang, codes in EASYOCR_LANGS.items()}
+
+
+def get_language():
+    return session.get('language', 'en')
+
+
+def get_alphabet():
+    return ALPHABETS[get_language()]
 
 
 def get_scores():
-    if 'scores' not in session:
-        session['scores'] = {c: 0 for c in ascii_uppercase}
-    return session['scores']
+    lang = get_language()
+    scores_key = f'scores_{lang}'
+    if scores_key not in session:
+        session[scores_key] = {c: 0 for c in ALPHABETS[lang]}
+    return session[scores_key]
 
 
 def get_current_sample():
@@ -30,8 +64,34 @@ def index():
     return app.send_static_file("index.html")
 
 
+@app.route('/language', methods=['GET'])
+def get_lang():
+    return jsonify({
+        'language': get_language(),
+        'alphabet': get_alphabet(),
+        'name': LANGUAGE_NAMES[get_language()],
+        'available': list(LANGUAGE_NAMES.keys()),
+    })
+
+
+@app.route('/language', methods=['POST'])
+def set_language():
+    data = request.get_json()
+    lang = data.get('language', 'en')
+    if lang in ALPHABETS:
+        session['language'] = lang
+        session.modified = True
+    return jsonify({
+        'language': get_language(),
+        'alphabet': get_alphabet(),
+        'name': LANGUAGE_NAMES[get_language()],
+        'scores': get_scores(),
+    })
+
+
 @app.route('/sample', methods=['GET'])
 def get_sample():
+    lang = get_language()
     scores = get_scores()
     chars = np.array(list(scores.keys()))
     weights = np.array([1 - score for score in scores.values()])
@@ -39,8 +99,8 @@ def get_sample():
         weights = np.ones_like(weights) / weights.shape[0]
     else:
         weights = weights / np.sum(weights)
-    weighted_chars = list(np.random.choice(chars, 4, replace=False, p=weights))
-    sample = generate_samples(1, 4, weighted_chars)[0]
+    weighted_chars = list(np.random.choice(chars, min(4, len(chars)), replace=False, p=weights))
+    sample = generate_samples(1, 4, weighted_chars, lang)[0]
     set_current_sample(sample)
     return sample
 
@@ -54,16 +114,20 @@ def submit_canvas():
 
     scores = get_scores()
     success_chars = generate_score(recognized_input, trimmed_sample, scores)
-    session['scores'] = scores  # Mark session as modified
+
+    lang = get_language()
+    session[f'scores_{lang}'] = scores
     session.modified = True
 
-    return {
+    return jsonify({
         'scores': scores,
         'successful': success_chars
-    }
+    })
 
 
 def recognize_canvas(image_data) -> list[tuple[str, float]]:
+    lang = get_language()
+    reader = readers[lang]
     result = reader.readtext(image_data)
     return [(each[1], each[2]) for each in result]
 
@@ -71,6 +135,7 @@ def recognize_canvas(image_data) -> list[tuple[str, float]]:
 def generate_score(
         recognized_input: list[tuple[str, float]], trimmed_sample: str, scores: dict
 ) -> list[str]:
+    lang = get_language()
     trimmed_input = "".join(text for text, _ in recognized_input)
     confidence_for_each_input_letter = [
         confidence for text, confidence in recognized_input for _ in text
@@ -85,9 +150,12 @@ def generate_score(
     input_index = 0
     for i, letter in enumerate(trimmed_sample):
         if text_presence[i]:
-            if letter.upper() in scores and confidence_for_each_input_letter[input_index] > confidence_threshold:
-                scores[letter.upper()] = min(1, scores[letter.upper()] + 1 / practice_threshold)
-                success_chars.add(letter.upper())
+            # For English/Russian, normalize case. Arabic has no case.
+            normalized = letter.upper() if lang in ['en', 'ru'] else letter
+            if normalized in scores and input_index < len(confidence_for_each_input_letter):
+                if confidence_for_each_input_letter[input_index] > confidence_threshold:
+                    scores[normalized] = min(1, scores[normalized] + 1 / practice_threshold)
+                    success_chars.add(normalized)
             input_index += 1
 
     return list(success_chars)
