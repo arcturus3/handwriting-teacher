@@ -79,7 +79,7 @@ function setup() {
         setupLanguageButtons(data.language);
         currentScores = initScores(currentAlphabet);
         createAlphabetGrid(currentScores, currentAlphabet);
-        submit(true);
+        fetchSample();
     });
 
     const canvasElement = document.getElementById("defaultCanvas0");
