@@ -1,7 +1,7 @@
 import os
-import openai
+from openai import OpenAI
 
-openai.api_key = os.getenv('OPENAI_API_KEY')
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 
 def generate_prompt(word_count: int, targets: list[str]) -> str:
@@ -13,10 +13,10 @@ def generate_prompt(word_count: int, targets: list[str]) -> str:
 def generate_samples(sample_count: int, word_count: int, targets: list[str]) -> list[str]:
     prompt = generate_prompt(word_count, targets)
     messages = [{'role': 'user', 'content': prompt}]
-    completion = openai.ChatCompletion.create(
+    completion = client.chat.completions.create(
         model='gpt-4',
         messages=messages,
         temperature=1,
         n=sample_count,
     )
-    return [choice['message']['content'] for choice in completion['choices']]
+    return [choice.message.content for choice in completion.choices]

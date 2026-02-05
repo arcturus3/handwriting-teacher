@@ -1,6 +1,10 @@
 venv
 __pycache__
+.git
+.gitignore
+.env
+*.pyc
 .DS_Store
 .vscode
 .idea
-.env
+README.md

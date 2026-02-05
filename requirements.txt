@@ -1,5 +1,5 @@
-biopython
-easyocr
-Flask
-openai
-numpy
+biopython==1.86
+easyocr==1.7.2
+Flask==3.1.2
+numpy==2.4.2
+openai==2.16.0
