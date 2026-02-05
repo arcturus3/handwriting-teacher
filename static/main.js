@@ -35,9 +35,6 @@ async function fetchLanguageSettings() {
 
 // Switch language
 async function switchLanguage(lang) {
-    // Immediately clear grid and show loading state
-    document.getElementById('alphabet-grid').innerHTML = '<div class="loading">Loading...</div>';
-
     // Update active button immediately
     document.querySelectorAll('.lang-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.lang === lang);
@@ -247,6 +244,8 @@ function uploadImage() {
 
 function fetchSample() {
     const sampleText = document.getElementById("sample");
+    sampleText.innerHTML = '';
+
     fetch("/sample")
         .then((res) => {
             const proccesselement = document.getElementById("statusText");
