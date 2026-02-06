@@ -119,6 +119,9 @@ nav a {
     grid-template-columns: repeat(5, 100px); /* Adjust the number and width of columns as needed */
     gap: 10px; /* Adjust the gap between grid items */
     justify-content: center; /* Center the grid horizontally */
+    max-width: 100%;
+    padding: 0 10px;
+    box-sizing: border-box;
 }
 
 /* RTL support for Arabic */
@@ -128,6 +131,11 @@ nav a {
 
 .alphabet-container.rtl .alphabet-item {
     font-family: 'Arial', 'Noto Sans Arabic', sans-serif;
+}
+
+/* Keep progress bars LTR even in RTL mode - progress represents quantity, not text */
+.alphabet-container.rtl .progress-bar-container {
+    direction: ltr;
 }
 
 /* Style for each grid item (letter element) */
@@ -199,6 +207,20 @@ nav a {
     border: 1px solid #ddd; /* Border */
     border-radius: 5px; /* Rounded corners */
     box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); /* Box shadow for a subtle elevation effect */
+}
+
+/* Mobile: flexible grid for phones */
+@media (max-width: 600px) {
+    .alphabet-container {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 100px));
+        justify-content: center;
+        padding: 0 10px;
+    }
+
+    .alphabet-item {
+        width: 80px;
+        height: 80px;
+    }
 }
 
 /* attemt at responsiveness */
