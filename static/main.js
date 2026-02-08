@@ -95,6 +95,24 @@ function setup() {
     window.addEventListener("pointerup", mouseReleased);
 }
 
+function windowResized() {
+    const holder = document.getElementById("canvasHolder");
+    const newWidth = holder.clientWidth;
+    const newHeight = holder.clientHeight;
+
+    // Save current canvas content
+    const snapshot = get();
+
+    resizeCanvas(newWidth, newHeight);
+    background(220);
+
+    // Restore drawing scaled to new size
+    image(snapshot, 0, 0, newWidth, newHeight);
+
+    cWidth = newWidth;
+    cHeight = newHeight;
+}
+
 function draw() {
     fill(0);
     if (drawing && !imageUploaded) {
