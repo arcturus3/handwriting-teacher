@@ -3,6 +3,7 @@ let imageUploaded = false;
 let cWidth = document.getElementById("canvasHolder").clientWidth;
 let cHeight = document.getElementById("canvasHolder").clientHeight;
 let canvas;
+let canvasBackup = null;
 
 let currentScores = {};
 
@@ -77,7 +78,7 @@ function setup() {
     // Initialize with server settings, then set up buttons
     fetchLanguageSettings().then(data => {
         setupLanguageButtons(data.language);
-        currentScores = initScores(currentAlphabet);
+        currentScores = data.scores || initScores(currentAlphabet);
         createAlphabetGrid(currentScores, currentAlphabet);
         fetchSample();
     });
@@ -100,14 +101,18 @@ function windowResized() {
     const newWidth = holder.clientWidth;
     const newHeight = holder.clientHeight;
 
-    // Save current canvas content
-    const snapshot = get();
+    const current = get();
+
+    if (!canvasBackup || current.width >= canvasBackup.width) {
+        canvasBackup = current;
+    } else {
+        // Canvas shrank previously — merge new strokes onto the larger backup
+        canvasBackup.copy(current, 0, 0, current.width, current.height, 0, 0, current.width, current.height);
+    }
 
     resizeCanvas(newWidth, newHeight);
     background(220);
-
-    // Restore drawing scaled to new size
-    image(snapshot, 0, 0, newWidth, newHeight);
+    image(canvasBackup, 0, 0);
 
     cWidth = newWidth;
     cHeight = newHeight;
@@ -181,9 +186,11 @@ function submit(firstTime) {
     imageUploaded = false;
 
     const formData = new FormData();
+    const statusLine = document.getElementById("statusLine");
     const proccesselement = document.getElementById("statusText");
     const feedbackElement = document.getElementById("feedbackText");
     if (!firstTime) {
+        statusLine.style.display = "";
         proccesselement.textContent = "Submission Accepted";
     }
     fetch(dataURL)
@@ -205,9 +212,23 @@ function submit(firstTime) {
                     if (!firstTime) {
                         proccesselement.textContent = "Updating Character Scores...";
                     }
-                    if (data["successful"] !== undefined) {
-                        console.log(data["successful"]);
-                        feedbackElement.textContent = "Great job with these letters: " + data["successful"];
+                    if (data["sample"] && data["char_results"]) {
+                        feedbackElement.innerHTML = "";
+                        const label = document.createElement("strong");
+                        label.textContent = "Last Attempt: ";
+                        feedbackElement.appendChild(label);
+                        const sample = data["sample"];
+                        const results = data["char_results"];
+                        for (let i = 0; i < sample.length; i++) {
+                            const span = document.createElement("span");
+                            span.textContent = sample[i];
+                            if (results[i] === true) {
+                                span.style.color = "#2e7d32";
+                            } else if (results[i] === false) {
+                                span.style.color = "#c62828";
+                            }
+                            feedbackElement.appendChild(span);
+                        }
                     }
                     currentScores = data['scores'];
                     return createAlphabetGrid(currentScores, currentAlphabet);
@@ -268,6 +289,7 @@ function fetchSample() {
         .then((res) => {
             const proccesselement = document.getElementById("statusText");
             proccesselement.innerText = "";
+            document.getElementById("statusLine").style.display = "none";
             return res.text();
         })
         .then((sample) => (sampleText.innerHTML = sample));

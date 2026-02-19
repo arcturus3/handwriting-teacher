@@ -70,6 +70,7 @@ def get_lang():
         'language': get_language(),
         'alphabet': get_alphabet(),
         'name': LANGUAGE_NAMES[get_language()],
+        'scores': get_scores(),
         'available': list(LANGUAGE_NAMES.keys()),
     })
 
@@ -113,7 +114,7 @@ def submit_canvas():
     recognized_input = recognize_canvas(canvas)
 
     scores = get_scores()
-    success_chars = generate_score(recognized_input, trimmed_sample, scores)
+    char_results = generate_score(recognized_input, trimmed_sample, current_sample, scores)
 
     lang = get_language()
     session[f'scores_{lang}'] = scores
@@ -121,7 +122,8 @@ def submit_canvas():
 
     return jsonify({
         'scores': scores,
-        'successful': success_chars
+        'sample': current_sample,
+        'char_results': char_results,
     })
 
 
@@ -133,8 +135,8 @@ def recognize_canvas(image_data) -> list[tuple[str, float]]:
 
 
 def generate_score(
-        recognized_input: list[tuple[str, float]], trimmed_sample: str, scores: dict
-) -> list[str]:
+        recognized_input: list[tuple[str, float]], trimmed_sample: str, original_sample: str, scores: dict
+) -> list:
     lang = get_language()
     trimmed_input = "".join(text for text, _ in recognized_input)
     confidence_for_each_input_letter = [
@@ -150,7 +152,6 @@ def generate_score(
     input_index = 0
     for i, letter in enumerate(trimmed_sample):
         if text_presence[i]:
-            # For English/Russian, normalize case. Arabic has no case.
             normalized = letter.upper() if lang in ['en', 'ru'] else letter
             if normalized in scores and input_index < len(confidence_for_each_input_letter):
                 if confidence_for_each_input_letter[input_index] > confidence_threshold:
@@ -158,7 +159,17 @@ def generate_score(
                     success_chars.add(normalized)
             input_index += 1
 
-    return list(success_chars)
+    # Map text_presence back to original sample (with spaces)
+    char_results = []
+    ti = 0
+    for ch in original_sample:
+        if ch == ' ':
+            char_results.append(None)
+        else:
+            char_results.append(text_presence[ti] if ti < len(text_presence) else False)
+            ti += 1
+
+    return char_results
 
 
 if __name__ == '__main__':
