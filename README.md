@@ -1,4 +1,5 @@
-# Handwriting Teacher
+# [Handwriting Teacher](betterletters.app)
+[betterletters.app/](https://betterletters.app/)
 
 **HackMIT 2023 Education Track Winner**
 
