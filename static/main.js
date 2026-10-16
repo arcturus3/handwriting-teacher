@@ -130,17 +130,40 @@ function canvasPoint(event) {
     return {x: event.clientX - rect.left, y: event.clientY - rect.top};
 }
 
+// What's on the canvas, or null while it has no size: p5's get() throws on a 0-size canvas.
+function drawingSnapshot() {
+    return width > 0 && height > 0 ? get() : null;
+}
+
+// Whether the canvas holder has room to draw in. It has none for a moment while DevTools
+// switches device mode, or while the page is in a hidden tab or pane.
+function holderHasRoom() {
+    const holder = document.getElementById("canvasHolder");
+    return holder.clientWidth > 0 && holder.clientHeight > 0;
+}
+
 function windowResized() {
+    // Keep the canvas as it is until there's room for it again.
+    if (!holderHasRoom()) {
+        return;
+    }
     // Turning the phone or entering the browser's own full screen resizes the area.
     if (document.getElementById("writingArea").classList.contains("fullscreen")) {
-        fitCanvasToHolder(get());
+        fitCanvasToHolder(drawingSnapshot());
         return;
     }
     const holder = document.getElementById("canvasHolder");
     const newWidth = holder.clientWidth;
     const newHeight = holder.clientHeight;
 
-    const current = get();
+    const current = drawingSnapshot();
+    if (!current) {
+        resizeCanvas(newWidth, newHeight);
+        background(220);
+        cWidth = newWidth;
+        cHeight = newHeight;
+        return;
+    }
 
     if (!canvasBackup || current.width >= canvasBackup.width) {
         canvasBackup = current;
@@ -187,13 +210,24 @@ function inkBounds(margin) {
     };
 }
 
-// Resizes the canvas to its holder, keeping what's written. Writing too big for the new
-// size is cropped to its own extent and shrunk to fit, so leaving full screen never cuts
-// letters off or makes them too small to read.
+// Resizes the canvas to its holder, keeping what's written (drawingImage, or null for a blank
+// canvas). Writing too big for the new size is cropped to its own extent and shrunk to fit,
+// so leaving full screen never cuts letters off or makes them too small to read.
 function fitCanvasToHolder(drawingImage) {
+    if (!holderHasRoom()) {
+        return;
+    }
     const holder = document.getElementById("canvasHolder");
     const newWidth = holder.clientWidth;
     const newHeight = holder.clientHeight;
+    if (!drawingImage) {
+        resizeCanvas(newWidth, newHeight);
+        background(220);
+        cWidth = newWidth;
+        cHeight = newHeight;
+        canvasBackup = null;
+        return;
+    }
     const fits = drawingImage.width <= newWidth && drawingImage.height <= newHeight;
     const source = (!fits && inkBounds(20)) || {x: 0, y: 0, width: drawingImage.width, height: drawingImage.height};
     const scale = Math.min(1, newWidth / source.width, newHeight / source.height);
@@ -222,7 +256,7 @@ function toggleFullscreen() {
     const area = document.getElementById("writingArea");
     const button = document.getElementById("fullscreenButton");
     const entering = !area.classList.contains("fullscreen");
-    const drawingImage = get();
+    const drawingImage = drawingSnapshot();
 
     area.classList.toggle("fullscreen", entering);
     document.body.classList.toggle("writing-fullscreen", entering);

@@ -191,3 +191,54 @@ def test_a_line_written_across_the_top_of_full_screen_stays_big_enough_to_read(
     page.get_by_role('button', name='Exit full screen').tap()
     # It fits the small box as written, so it shouldn't shrink with the empty page below it.
     assert ink_height(page) >= 0.9 * written
+
+
+DESKTOP = {'viewport': {'width': 1280, 'height': 800}, 'device_scale_factor': 2}
+
+
+@pytest.fixture()
+def desktop_page(site: str) -> Iterator['Page']:
+    yield from open_page(site, DESKTOP)
+
+
+def squeeze_holder(page: 'Page', width: str) -> None:
+    """Sets the canvas holder's width and resizes the window, as DevTools' device switch does."""
+    page.evaluate("""(width) => {
+        document.getElementById('canvasHolder').style.width = width;
+        window.dispatchEvent(new Event('resize'));
+    }""", width)
+
+
+def test_the_canvas_comes_back_after_its_holder_briefly_has_no_width(desktop_page: 'Page') -> None:
+    errors: list[str] = []
+    desktop_page.on('pageerror', lambda error: errors.append(str(error)))
+    scribble(desktop_page)
+    squeeze_holder(desktop_page, '0px')
+    squeeze_holder(desktop_page, '')
+    holder_width = desktop_page.evaluate("document.getElementById('canvasHolder').clientWidth")
+    assert canvas_size(desktop_page)[0] == holder_width > 0
+    assert inked_pixels(desktop_page) > 0
+    assert errors == []
+
+
+def test_a_page_opened_with_no_room_gets_a_canvas_once_there_is_room(site: str) -> None:
+    hidden = "#canvasHolder { width: 0 !important; }"
+    with sync_api.sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        page = browser.new_context(**DESKTOP).new_page()
+        errors: list[str] = []
+        page.on('pageerror', lambda error: errors.append(str(error)))
+        # Before any of the page's scripts run, as when it loads in a hidden tab or pane.
+        page.add_init_script(f"""window.hiddenStyle = new CSSStyleSheet();
+            window.hiddenStyle.replaceSync('{hidden}');
+            document.adoptedStyleSheets = [window.hiddenStyle];""")
+        page.goto(site)
+        page.wait_for_function("document.getElementById('sample').textContent === 'Jazz quiz'")
+        assert canvas_size(page)[0] == 0
+        page.evaluate("document.adoptedStyleSheets = []; window.dispatchEvent(new Event('resize'))")
+        holder_width = page.evaluate("document.getElementById('canvasHolder').clientWidth")
+        assert canvas_size(page)[0] == holder_width > 0
+        scribble(page)
+        assert inked_pixels(page) > 0
+        assert errors == []
+        browser.close()
