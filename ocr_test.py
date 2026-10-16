@@ -31,3 +31,47 @@ def test_reads_a_canvas_into_text_with_confidences() -> None:
 
 def test_a_blank_canvas_reads_as_nothing() -> None:
     assert ocr.recognize(canvas_jpeg(''), 'en') == []
+
+
+def staggered_canvas_jpeg(words: list[str], drops: list[int]) -> bytes:
+    """Words left to right, each dropped by its own amount, as handwriting wanders."""
+    image = Image.new('RGB', (1400, 400), (220, 220, 220))
+    draw = ImageDraw.Draw(image)
+    font = ImageFont.load_default(size=72)
+    x = 40
+    for word, drop in zip(words, drops):
+        draw.text((x, 60 + drop), word, fill='black', font=font)
+        x += draw.textlength(word + ' ', font=font)
+    out = io.BytesIO()
+    image.save(out, format='JPEG')
+    return out.getvalue()
+
+
+def test_words_at_different_heights_come_back_left_to_right() -> None:
+    # Later words sit higher, so Paddle's top-to-bottom order would put them first.
+    image = staggered_canvas_jpeg(['A', 'cat', 'can', 'relax'], [60, 40, 0, 20])
+    text = ' '.join(t for t, _ in ocr.recognize(image, 'en')).lower()
+    assert text.split() == ['a', 'cat', 'can', 'relax']
+
+
+def test_separate_lines_still_read_top_to_bottom() -> None:
+    image = Image.new('RGB', (900, 400), 'white')
+    draw = ImageDraw.Draw(image)
+    font = ImageFont.load_default(size=64)
+    draw.text((500, 40), 'first', fill='black', font=font)
+    draw.text((40, 240), 'second', fill='black', font=font)
+    out = io.BytesIO()
+    image.save(out, format='JPEG')
+    assert [t.lower() for t, _ in ocr.recognize(out.getvalue(), 'en')] == ['first', 'second']
+
+
+def test_big_writing_on_a_high_density_canvas_keeps_every_letter() -> None:
+    # A 1,360 by 300 CSS-pixel canvas at device pixel ratio 2, written edge to edge with a thick pen.
+    image = Image.new('RGB', (2720, 600), (220, 220, 220))
+    draw = ImageDraw.Draw(image)
+    font = ImageFont.load_default(size=300)
+    draw.text((120, 80), 'Steve keeps', fill='black', font=font, stroke_width=6, stroke_fill='black')
+    out = io.BytesIO()
+    image.save(out, format='JPEG')
+    text = ''.join(t for t, _ in ocr.recognize(out.getvalue(), 'en')).replace(' ', '').lower()
+    assert text == 'stevekeeps'

@@ -2,8 +2,8 @@
 
 Chosen by a benchmark on real handwriting (IAM English lines, KHATT Arabic lines, Russian
 words), 2 CPU threads. Character error rate and median time per image, against EasyOCR:
-English 0.35 at 221 ms (EasyOCR 0.63 at 535 ms), Arabic 0.60 at 279 ms (0.75 at 1,177 ms),
-Russian 0.76 (0.82). PP-OCRv6 reads no Arabic or Cyrillic, so those use PP-OCRv5's models.
+English 0.21 at 100 ms (EasyOCR 0.63 at 535 ms), Arabic 0.63 at 164 ms (0.75 at 1,177 ms),
+Russian 0.77 (0.82). PP-OCRv6 reads no Arabic or Cyrillic, so those use PP-OCRv5's models.
 """
 import os
 
@@ -18,6 +18,11 @@ RECOGNITION_MODELS = {
     'ar': 'arabic_PP-OCRv5_mobile_rec',
 }
 CPU_THREADS = int(os.getenv('OCR_CPU_THREADS', '2'))
+# Detection shrinks the image so its longer side is at most this. A high-density canvas is
+# 2,000 to 2,800 pixels wide with letters hundreds of pixels tall, which the detector misses
+# letters of and breaks into specks. On the benchmark this cut English CER from 0.30 to 0.21
+# and halved the time, with Arabic and Russian unchanged.
+DETECTION_MAX_SIDE = 960
 
 _readers: dict[str, PaddleOCR] = {}
 
@@ -36,6 +41,8 @@ def reader(lang: str) -> PaddleOCR:
             # Paddle 3.3's oneDNN path fails on x86 with "ConvertPirAttribute2RuntimeAttribute
             # not support", so run plain CPU kernels.
             enable_mkldnn=False,
+            text_det_limit_side_len=DETECTION_MAX_SIDE,
+            text_det_limit_type='max',
         )
     return _readers[lang]
 
@@ -46,14 +53,43 @@ def load_all() -> None:
         reader(lang)
 
 
+# A box joins a line when at least this much of its height overlaps the line's.
+LINE_OVERLAP = 0.3
+
+Box = tuple[float, float, float, float]  # left, top, right, bottom
+
+
+def reading_order(boxes: list[Box]) -> list[int]:
+    """Indexes of the boxes in reading order: lines top to bottom, each left to right.
+
+    Paddle finds each handwritten word on its own and orders them top to bottom, so a word
+    written a little higher jumps ahead of the words before it. A line's span grows with each
+    word it takes, so writing that wanders up or down stays one line.
+    """
+    lines: list[tuple[float, float, list[int]]] = []  # top, bottom, members
+    for i in sorted(range(len(boxes)), key=lambda i: boxes[i][1]):
+        _, top, _, bottom = boxes[i]
+        height = max(bottom - top, 1.0)
+        for n, (line_top, line_bottom, members) in enumerate(lines):
+            if min(bottom, line_bottom) - max(top, line_top) >= LINE_OVERLAP * height:
+                lines[n] = (min(top, line_top), max(bottom, line_bottom), members + [i])
+                break
+        else:
+            lines.append((top, bottom, [i]))
+    lines.sort(key=lambda line: line[0])
+    return [i for _, _, members in lines for i in sorted(members, key=lambda i: boxes[i][0])]
+
+
 def recognize(image_data: bytes, lang: str) -> list[tuple[str, float]]:
-    """Each line of text read from the image, in reading order, with its confidence (0 to 1)."""
+    """Each piece of text read from the image, in reading order, with its confidence (0 to 1)."""
     image = cv2.imdecode(np.frombuffer(image_data, np.uint8), cv2.IMREAD_COLOR)
     if image is None:
         raise ValueError('The canvas image could not be decoded.')
-    lines: list[tuple[str, float]] = []
+    pieces: list[tuple[str, float]] = []
     for page in reader(lang).predict(image):
-        for text, score in zip(page['rec_texts'], page['rec_scores']):
+        boxes: list[Box] = [(float(l), float(t), float(r), float(b)) for l, t, r, b in page['rec_boxes']]
+        for i in reading_order(boxes):
+            text = str(page['rec_texts'][i])
             if text.strip():
-                lines.append((str(text), float(score)))
-    return lines
+                pieces.append((text, float(page['rec_scores'][i])))
+    return pieces
