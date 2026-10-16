@@ -1,9 +1,11 @@
 import os
+import time
 from dotenv import load_dotenv
 load_dotenv()
 
 from flask import Flask, request, session, jsonify
 import numpy as np
+import analytics
 import ocr
 from align import align
 from generate import generate_samples
@@ -26,6 +28,8 @@ LANGUAGE_NAMES = {
 
 # Load every language's OCR models at startup
 ocr.load_all()
+
+track: analytics.Track = analytics.tracker_from_env(os.environ) or (lambda name, data: None)
 
 
 def get_language():
@@ -75,6 +79,7 @@ def set_language():
     if lang in ALPHABETS:
         session['language'] = lang
         session.modified = True
+        track('language-changed', {'language': lang})
     return jsonify({
         'language': get_language(),
         'alphabet': get_alphabet(),
@@ -94,7 +99,13 @@ def get_sample():
     else:
         weights = weights / np.sum(weights)
     weighted_chars = list(np.random.choice(chars, min(4, len(chars)), replace=False, p=weights))
-    sample = generate_samples(1, 4, weighted_chars, lang)[0]
+    started = time.monotonic()
+    try:
+        sample = generate_samples(1, 4, weighted_chars, lang)[0]
+    except Exception as error:
+        track('sentence-failed', {'language': lang, 'error': type(error).__name__})
+        raise
+    track('sentence-generated', {'language': lang, 'ms': round((time.monotonic() - started) * 1000)})
     set_current_sample(sample)
     return sample
 
@@ -104,7 +115,9 @@ def submit_canvas():
     canvas = request.files["imageFile"].read()
     current_sample = get_current_sample()
     trimmed_sample = current_sample.replace(" ", "")
+    started = time.monotonic()
     recognized_input = recognize_canvas(canvas)
+    ocr_ms = round((time.monotonic() - started) * 1000)
 
     scores = get_scores()
     char_results = generate_score(recognized_input, trimmed_sample, current_sample, scores)
@@ -112,6 +125,15 @@ def submit_canvas():
     lang = get_language()
     session[f'scores_{lang}'] = scores
     session.modified = True
+
+    # Counts only: nothing the learner wrote or was asked to write is sent.
+    track('submission-scored', {
+        'language': lang,
+        'letters': len(trimmed_sample),
+        'matched': sum(1 for result in char_results if result),
+        'read_anything': bool(recognized_input),
+        'ocr_ms': ocr_ms,
+    })
 
     return jsonify({
         'scores': scores,

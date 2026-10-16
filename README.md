@@ -42,6 +42,26 @@ python app.py
 
 Visit `http://localhost:5123`
 
+## Analytics
+
+Usage goes to the Umami instance at [analytics.davidteju.dev](https://analytics.davidteju.dev)
+(website "BetterLetters").
+
+- **Page views:** Umami's script in each page under `static/`. It counts only on
+  betterletters.app, so local runs stay out of the numbers.
+- **Practice events:** sent from the server by `analytics.py`, so ad blockers can't hide them.
+  They are filed under the page `/practice`:
+
+| Event | Data |
+| --- | --- |
+| `language-changed` | `language` |
+| `sentence-generated` | `language`, `ms` (generation time) |
+| `sentence-failed` | `language`, `error` (exception type) |
+| `submission-scored` | `language`, `letters`, `matched`, `read_anything`, `ocr_ms` |
+
+Events carry counts only: no handwriting, sentence or recognized text leaves the server.
+Server events are off unless `UMAMI_URL` and `UMAMI_WEBSITE_ID` are set (see `.env.example`).
+
 ## Deployment
 
 Docker:
