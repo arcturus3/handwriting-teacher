@@ -14,8 +14,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Download the OCR models into the image, so a restart doesn't fetch them again.
-RUN python -c "import ocr; ocr.load_all()"
+# Download the OCR models into the image, so a restart doesn't fetch them again, then run the
+# tests here: the OCR backend behaves differently on this platform than on a Mac.
+RUN python -c "import ocr; ocr.load_all()" \
+    && pip install --no-cache-dir pytest \
+    && OPENAI_API_KEY=test python -m pytest -q -p no:cacheprovider \
+    && pip uninstall -y pytest
 
 EXPOSE 5123
 

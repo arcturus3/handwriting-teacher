@@ -33,6 +33,9 @@ def reader(lang: str) -> PaddleOCR:
             use_textline_orientation=False,
             device='cpu',
             cpu_threads=CPU_THREADS,
+            # Paddle 3.3's oneDNN path fails on x86 with "ConvertPirAttribute2RuntimeAttribute
+            # not support", so run plain CPU kernels.
+            enable_mkldnn=False,
         )
     return _readers[lang]
 
