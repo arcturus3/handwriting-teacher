@@ -9,14 +9,14 @@ An adaptive handwriting practice app that uses OCR and sequence alignment to tra
 
 1. **Get a sentence** - GPT-6 Luna (low reasoning effort) generates a practice sentence weighted toward letters you struggle with
 2. **Write it** - Draw on the canvas or upload a photo of your handwriting
-3. **Get feedback** - EasyOCR reads your writing, Biopython's sequence alignment scores accuracy
+3. **Get feedback** - PaddleOCR reads your writing, Biopython's sequence alignment scores accuracy
 4. **Improve** - Character mastery grid updates, new sentences focus on weak letters
 
 ## Tech Stack
 
-- **Backend**: Flask, EasyOCR, Biopython (pairwise sequence alignment), OpenAI GPT-6 Luna
+- **Backend**: Flask, PaddleOCR, Biopython (pairwise sequence alignment), OpenAI GPT-6 Luna
 - **Frontend**: Vanilla JS, p5.js for drawing canvas
-- **ML**: EasyOCR for handwriting recognition
+- **ML**: PaddleOCR for handwriting recognition (PP-OCRv6 for English, PP-OCRv5 for Russian and Arabic)
 
 ## Setup
 

@@ -13,6 +13,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+# Download the OCR models into the image, so a restart doesn't fetch them again.
+RUN python -c "import ocr; ocr.load_all()"
+
 EXPOSE 5123
 
 CMD ["python", "app.py"]

@@ -4,7 +4,7 @@ load_dotenv()
 
 from flask import Flask, request, session, jsonify
 import numpy as np
-import easyocr
+import ocr
 from align import align
 from generate import generate_samples
 
@@ -24,15 +24,8 @@ LANGUAGE_NAMES = {
     'ar': 'Arabic',
 }
 
-# EasyOCR language codes
-EASYOCR_LANGS = {
-    'en': ['en'],
-    'ru': ['ru'],
-    'ar': ['ar'],
-}
-
-# Load all OCR readers at startup
-readers = {lang: easyocr.Reader(codes) for lang, codes in EASYOCR_LANGS.items()}
+# Load every language's OCR models at startup
+ocr.load_all()
 
 
 def get_language():
@@ -127,11 +120,8 @@ def submit_canvas():
     })
 
 
-def recognize_canvas(image_data) -> list[tuple[str, float]]:
-    lang = get_language()
-    reader = readers[lang]
-    result = reader.readtext(image_data)
-    return [(each[1], each[2]) for each in result]
+def recognize_canvas(image_data: bytes) -> list[tuple[str, float]]:
+    return ocr.recognize(image_data, get_language())
 
 
 def generate_score(
