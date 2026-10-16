@@ -32,3 +32,8 @@ def test_a_stray_speck_in_the_reading_costs_nothing() -> None:
 
 def test_case_counts() -> None:
     assert marked('Zombiescanmovecars.', 'zombiescanmovecars.') == '_ombiescanmovecars.'
+
+
+def test_a_letter_read_after_a_speck_still_counts() -> None:
+    # The "b" of "black" was written and read; a speck before it mustn't cost it.
+    assert marked('Herblackdogbarks.', 'Her|ba1kdogbanks.') == 'Herb_a_kdogba_ks.'

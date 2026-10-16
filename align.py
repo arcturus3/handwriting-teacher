@@ -3,10 +3,10 @@ from Bio import Align
 # Every score is set here, so a Biopython upgrade can't change how letters are matched:
 # 1.86 changed the default gap extension from 0 to -1, which made splitting a gap cheaper
 # than extending it and scattered a partial reading's letters across the sentence.
-MATCH = 2.0
+MATCH = 3.0
 MISMATCH = -1.0  # a misread letter costs less than a gap, so it stays in place
 GAP_OPEN = -2.0
-GAP_EXTEND = -0.5  # less than opening, so one long gap beats several short ones
+GAP_EXTEND = -1.0  # less than opening, so one long gap beats several short ones
 # A reading often covers only part of the sentence: the writer stopped early, or the
 # detector missed the first or last word. Gaps at either end cost nothing.
 END_GAP = 0.0
