@@ -1,8 +1,12 @@
 import io
+import pathlib
 
 from PIL import Image, ImageDraw, ImageFont
 
 import ocr
+from align import align
+
+FIXTURES = pathlib.Path(__file__).parent / 'fixtures'
 
 
 def test_each_language_reads_with_the_model_that_won_the_benchmark() -> None:
@@ -75,3 +79,11 @@ def test_big_writing_on_a_high_density_canvas_keeps_every_letter() -> None:
     image.save(out, format='JPEG')
     text = ''.join(t for t, _ in ocr.recognize(out.getvalue(), 'en')).replace(' ', '').lower()
     assert text == 'stevekeeps'
+
+
+def test_large_real_handwriting_is_read() -> None:
+    # Femi's "Fred", cropped from his screen: letters about 240 px tall on a 1,344 by 400
+    # canvas. At that size the detector found only the "e".
+    image = (FIXTURES / 'fred-large-handwriting.jpg').read_bytes()
+    reading = ''.join(''.join(t.split()) for t, _ in ocr.recognize(image, 'en'))
+    assert sum(align('Fredjumpsforjoy.', reading)[:4]) >= 3, reading

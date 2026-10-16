@@ -23,6 +23,16 @@ CPU_THREADS = int(os.getenv('OCR_CPU_THREADS', '2'))
 # letters of and breaks into specks. On the benchmark this cut English CER from 0.30 to 0.21
 # and halved the time, with Arabic and Russian unchanged.
 DETECTION_MAX_SIDE = 960
+# The detector also misses letters much taller than the scanned handwriting it reads well,
+# whose letters are about 42 pixels tall. Writing on the canvas runs to 240 and beyond, so
+# detection shrinks the image further until its letters are about this tall. Images with
+# smaller letters, like the benchmark's, aren't shrunk any further.
+DETECTION_LETTER_HEIGHT = 64
+# The shrink stops here, so a bad height estimate (a shadow in a photo read as ink) can't
+# shrink an image to nothing.
+DETECTION_MIN_SIDE = 480
+# Ink blobs smaller than this many pixels are specks, not letters.
+MIN_LETTER_AREA = 30
 
 _readers: dict[str, PaddleOCR] = {}
 
@@ -80,13 +90,34 @@ def reading_order(boxes: list[Box]) -> list[int]:
     return [i for _, _, members in lines for i in sorted(members, key=lambda i: boxes[i][0])]
 
 
+def letter_height(image: np.ndarray) -> float | None:
+    """The median height of the ink's blobs, roughly a letter's height; None with no ink."""
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    _, ink = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    count, _, stats, _ = cv2.connectedComponentsWithStats(ink, connectivity=8)
+    heights = [
+        int(stats[i, cv2.CC_STAT_HEIGHT]) for i in range(1, count)
+        if stats[i, cv2.CC_STAT_AREA] >= MIN_LETTER_AREA
+    ]
+    return float(np.median(heights)) if heights else None
+
+
+def detection_side(image: np.ndarray) -> int:
+    """The longest side the detector should see this image at."""
+    longest = max(image.shape[:2])
+    height = letter_height(image)
+    scale = min(1.0, DETECTION_LETTER_HEIGHT / height) if height else 1.0
+    return int(min(DETECTION_MAX_SIDE, max(DETECTION_MIN_SIDE, longest * scale)))
+
+
 def recognize(image_data: bytes, lang: str) -> list[tuple[str, float]]:
     """Each piece of text read from the image, in reading order, with its confidence (0 to 1)."""
     image = cv2.imdecode(np.frombuffer(image_data, np.uint8), cv2.IMREAD_COLOR)
     if image is None:
         raise ValueError('The canvas image could not be decoded.')
     pieces: list[tuple[str, float]] = []
-    for page in reader(lang).predict(image):
+    for page in reader(lang).predict(
+            image, text_det_limit_side_len=detection_side(image), text_det_limit_type='max'):
         boxes: list[Box] = [(float(l), float(t), float(r), float(b)) for l, t, r, b in page['rec_boxes']]
         for i in reading_order(boxes):
             text = str(page['rec_texts'][i])
