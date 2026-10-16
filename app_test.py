@@ -2,6 +2,7 @@ import io
 from typing import Any
 from unittest.mock import patch
 
+import analytics
 import app
 
 
@@ -41,3 +42,10 @@ def test_a_failed_sentence_is_recorded_before_the_error_surfaces() -> None:
         response = client.get('/sample')
     assert response.status_code == 500
     assert events == [('sentence-failed', {'language': 'en', 'error': 'RuntimeError'})]
+
+
+def test_events_are_filed_under_the_browser_whose_request_caused_them() -> None:
+    headers = {'X-Real-IP': '203.0.113.9', 'User-Agent': 'Phone/1.0'}
+    with app.app.test_request_context(headers=headers):
+        assert app.requesting_browser() == analytics.Client(ip='203.0.113.9', user_agent='Phone/1.0')
+    assert app.requesting_browser() is None

@@ -3,7 +3,7 @@ import time
 from dotenv import load_dotenv
 load_dotenv()
 
-from flask import Flask, request, session, jsonify
+from flask import Flask, has_request_context, request, session, jsonify
 import numpy as np
 import analytics
 import ocr
@@ -29,7 +29,16 @@ LANGUAGE_NAMES = {
 # Load every language's OCR models at startup
 ocr.load_all()
 
-track: analytics.Track = analytics.tracker_from_env(os.environ) or (lambda name, data: None)
+
+
+def requesting_browser() -> analytics.Client | None:
+    """The browser whose request is being handled, so its events join its visit in Umami."""
+    return analytics.client_from_headers(request.headers.get) if has_request_context() else None
+
+
+track: analytics.Track = (
+    analytics.tracker_from_env(os.environ, requesting_browser) or (lambda name, data: None)
+)
 
 
 def get_language():

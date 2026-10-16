@@ -62,6 +62,11 @@ Usage goes to the Umami instance at [analytics.davidteju.dev](https://analytics.
 Events carry counts only: no handwriting, sentence or recognized text leaves the server.
 Server events are off unless `UMAMI_URL` and `UMAMI_WEBSITE_ID` are set (see `.env.example`).
 
+Umami counts a visitor by address and User-Agent, so each event is sent with those of the browser
+whose request caused it (nginx's `X-Real-IP` and the request's `User-Agent`), and lands in that
+browser's visit, with its location. An event sent outside a request goes out as the server, with
+a Beaker Browser User-Agent: Umami ignores bots, and nobody uses Beaker, so it stands out.
+
 ## Deployment
 
 Docker:
