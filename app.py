@@ -159,9 +159,11 @@ def generate_score(
         recognized_input: list[tuple[str, float]], trimmed_sample: str, original_sample: str, scores: dict
 ) -> list:
     lang = get_language()
-    trimmed_input = "".join(text for text, _ in recognized_input)
+    # The sample is matched without its spaces, so the reading is too.
+    letters_read = [("".join(text.split()), confidence) for text, confidence in recognized_input]
+    trimmed_input = "".join(text for text, _ in letters_read)
     confidence_for_each_input_letter = [
-        confidence for text, confidence in recognized_input for _ in text
+        confidence for text, confidence in letters_read for _ in text
     ]
 
     text_presence = align(trimmed_sample, trimmed_input)

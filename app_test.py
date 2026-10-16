@@ -49,3 +49,15 @@ def test_events_are_filed_under_the_browser_whose_request_caused_them() -> None:
     with app.app.test_request_context(headers=headers):
         assert app.requesting_browser() == analytics.Client(ip='203.0.113.9', user_agent='Phone/1.0')
     assert app.requesting_browser() is None
+
+
+def test_spaces_in_a_reading_dont_cost_letters() -> None:
+    client = app.app.test_client()
+    with patch.object(app, 'track', lambda name, data: None), \
+            patch.object(app, 'generate_samples', return_value=['Zombies can move cars.']), \
+            patch.object(app.ocr, 'recognize', return_value=[('Zombies can', 0.9)]):
+        client.get('/sample')
+        response = client.post('/submit_canvas', data={'imageFile': (io.BytesIO(b'jpeg'), 'c.jpg')})
+    sample = 'Zombies can move cars.'
+    marks = ''.join(' ' if ok is None else (ch if ok else '_') for ch, ok in zip(sample, response.json['char_results']))
+    assert marks == 'Zombies can ____ _____'
