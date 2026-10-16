@@ -81,6 +81,11 @@ docker run -p 5123:5123 -e OPENAI_API_KEY=your_key handwriting-teacher
 
 Or deploy directly to Railway/Render with the included Dockerfile.
 
+[betterletters.app](https://betterletters.app) runs on David's VPS from an image GitHub Actions
+builds from this repository (the build runs the tests). To ship `main` there, run
+`gh workflow run betterletters.yml -R DavidTeju/projects-vps`, or add `-f ref=<sha>` for another
+commit. The VPS no longer builds from a checkout.
+
 ## Team
 
 Built at HackMIT 2023 by:
