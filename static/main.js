@@ -118,6 +118,78 @@ function windowResized() {
     cHeight = newHeight;
 }
 
+// The part of the canvas with writing on it, plus a margin, in canvas units; null if blank.
+function inkBounds(margin) {
+    const element = document.getElementById("defaultCanvas0");
+    const density = element.width / width;
+    const data = element.getContext("2d").getImageData(0, 0, element.width, element.height).data;
+    let left = element.width, top = element.height, right = -1, bottom = -1;
+    for (let y = 0; y < element.height; y++) {
+        for (let x = 0; x < element.width; x++) {
+            // Strokes are black on a light grey (220) background.
+            if (data[(y * element.width + x) * 4] < 128) {
+                left = Math.min(left, x);
+                right = Math.max(right, x);
+                top = Math.min(top, y);
+                bottom = y;
+            }
+        }
+    }
+    if (right < 0) {
+        return null;
+    }
+    const x = Math.max(0, left / density - margin);
+    const y = Math.max(0, top / density - margin);
+    return {
+        x,
+        y,
+        width: Math.min(width, (right + 1) / density + margin) - x,
+        height: Math.min(height, (bottom + 1) / density + margin) - y,
+    };
+}
+
+// Resizes the canvas to its holder, keeping what's written. Writing too big for the new
+// size is cropped to its own extent and shrunk to fit, so leaving full screen never cuts
+// letters off or makes them too small to read.
+function fitCanvasToHolder(drawingImage) {
+    const holder = document.getElementById("canvasHolder");
+    const newWidth = holder.clientWidth;
+    const newHeight = holder.clientHeight;
+    const fits = drawingImage.width <= newWidth && drawingImage.height <= newHeight;
+    const source = (!fits && inkBounds(20)) || {x: 0, y: 0, width: drawingImage.width, height: drawingImage.height};
+    const scale = Math.min(1, newWidth / source.width, newHeight / source.height);
+    const drawnWidth = source.width * scale;
+    const drawnHeight = source.height * scale;
+
+    resizeCanvas(newWidth, newHeight);
+    background(220);
+    if (fits) {
+        image(drawingImage, 0, 0);
+    } else {
+        image(drawingImage, (newWidth - drawnWidth) / 2, (newHeight - drawnHeight) / 2, drawnWidth, drawnHeight,
+            source.x, source.y, source.width, source.height);
+    }
+
+    cWidth = newWidth;
+    cHeight = newHeight;
+    canvasBackup = null;
+}
+
+// Fills the screen with the sentence, the canvas and the buttons, for writing on a phone.
+// A fixed overlay rather than the Fullscreen API, which iPhones don't offer for a page.
+function toggleFullscreen() {
+    const area = document.getElementById("writingArea");
+    const button = document.getElementById("fullscreenButton");
+    const entering = !area.classList.contains("fullscreen");
+    const drawingImage = get();
+
+    area.classList.toggle("fullscreen", entering);
+    document.body.classList.toggle("writing-fullscreen", entering);
+    button.setAttribute("aria-label", entering ? "Exit full screen" : "Full screen");
+    button.textContent = entering ? "Done" : "Full screen";
+    fitCanvasToHolder(drawingImage);
+}
+
 function draw() {
     fill(0);
     if (drawing && !imageUploaded) {

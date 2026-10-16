@@ -8,7 +8,7 @@ An adaptive handwriting practice app that uses OCR and sequence alignment to tra
 ## How It Works
 
 1. **Get a sentence** - GPT-6 Luna (low reasoning effort) generates a practice sentence weighted toward letters you struggle with
-2. **Write it** - Draw on the canvas or upload a photo of your handwriting
+2. **Write it** - Draw on the canvas or upload a photo of your handwriting. On a phone or tablet, **Full screen** turns the whole screen into the canvas
 3. **Get feedback** - PaddleOCR reads your writing, Biopython's sequence alignment scores accuracy
 4. **Improve** - Character mastery grid updates, new sentences focus on weak letters
 
@@ -41,6 +41,10 @@ python app.py
 ```
 
 Visit `http://localhost:5123`
+
+Tests: `OPENAI_API_KEY=test python -m pytest`. The phone-layout tests in `fullscreen_test.py`
+drive headless Chromium and run only where Playwright is installed
+(`pip install playwright && playwright install chromium-headless-shell`); the Docker build skips them.
 
 ## Analytics
 

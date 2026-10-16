@@ -95,6 +95,46 @@ nav a {
     height: 200px;
 }
 
+/* Full screen writing, for phones and tablets */
+.fullscreenButton {
+    display: none;
+}
+
+@media (max-width: 900px), (pointer: coarse) {
+    .fullscreenButton {
+        display: inline-block;
+    }
+}
+
+body.writing-fullscreen {
+    overflow: hidden;
+}
+
+#writingArea.fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    padding: 12px 12px max(12px, env(safe-area-inset-bottom));
+    background: white;
+}
+
+#writingArea.fullscreen h3 {
+    margin: 0 0 8px;
+}
+
+#writingArea.fullscreen #canvasHolder {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+}
+
+#writingArea.fullscreen #feedbackText {
+    margin: 8px 0 0;
+}
+
 .left {
     flex: 1;
     padding: 20px;

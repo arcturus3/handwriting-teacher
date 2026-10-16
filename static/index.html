@@ -27,11 +27,13 @@
     </nav>
     <div class="pageLayout">
         <div class="left">
+            <div id="writingArea">
             <h3>Write the Following: <em id="sample"> </em></h3>
             <div id="canvasHolder"></div>
             <div class="buttonHolder">
                 <button id="uploadButton" class="inputButton" type="submit" onclick="uploadImage()">Upload .jpg</button>
                 <button type="submit" class="inputButton" onclick="submit()">Submit</button>
+                <button id="fullscreenButton" type="button" class="inputButton fullscreenButton" aria-label="Full screen" onclick="toggleFullscreen()">Full screen</button>
             </div>
             <input id="fileInput" type="file" accept=".jpg, .jpeg" style="display: none;">
 
@@ -39,6 +41,7 @@
             <!-- Here is where we update the user on the process -->
             <h4 id="statusLine" style="display: none;">Status: <span id="statusText"></span></h4>
             <p id = "feedbackText">Make sure you dot your i's and cross your t's!!!</p>
+            </div>
             <p>For best results, use a stylus or pen tablet. No stylus? Write on paper and upload a photo.</p>
         </div>
         <div class="right">
