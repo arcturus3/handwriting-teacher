@@ -135,6 +135,27 @@ body.writing-fullscreen {
     margin: 8px 0 0;
 }
 
+/* Writing runs along a line, so full screen is landscape. A page can't rotate an iPhone,
+   so on a phone held upright the area is drawn a quarter turn clockwise, to be read with
+   the phone turned on its side. main.js maps touches back through the same turn. */
+@media (orientation: portrait) {
+    #writingArea.fullscreen {
+        inset: auto;
+        top: 0;
+        left: 0;
+        width: 100vh;
+        width: 100dvh;
+        height: 100vw;
+        transform-origin: top left;
+        transform: translateX(100vw) rotate(90deg);
+    }
+}
+
+#canvasHolder canvas {
+    /* Drawing, not scrolling or zooming, is what a finger on the canvas does. */
+    touch-action: none;
+}
+
 .left {
     flex: 1;
     padding: 20px;

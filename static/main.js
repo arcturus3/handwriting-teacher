@@ -1,4 +1,3 @@
-let drawing = false;
 let imageUploaded = false;
 let cWidth = document.getElementById("canvasHolder").clientWidth;
 let cHeight = document.getElementById("canvasHolder").clientHeight;
@@ -8,6 +7,8 @@ let canvasBackup = null;
 let currentScores = {};
 
 let pointerDown = false;
+// Where the pen last was, in canvas coordinates, while it's on the canvas.
+let pen = null;
 
 // Initialize scores from alphabet
 function initScores(alphabet) {
@@ -84,19 +85,57 @@ function setup() {
     });
 
     const canvasElement = document.getElementById("defaultCanvas0");
-    const startListener = window.PointerEvent ? 'pointerdown' : 'touchstart';
-    const endListener = window.PointerEvent ? 'pointerup' : 'touchend';
-    canvasElement.addEventListener(startListener, () => {
+    canvasElement.addEventListener("pointerdown", (event) => {
         pointerDown = true;
+        if (!imageUploaded) {
+            canvasElement.setPointerCapture(event.pointerId);
+            pen = canvasPoint(event);
+        }
     });
-    canvasElement.addEventListener(endListener, () => {
-        pointerDown = false;
+    canvasElement.addEventListener("pointermove", (event) => {
+        if (!pen) {
+            return;
+        }
+        const next = canvasPoint(event);
+        stroke(0);
+        strokeWeight(7);
+        line(pen.x, pen.y, next.x, next.y);
+        pen = next;
     });
+    for (const end of ["pointerup", "pointercancel"]) {
+        canvasElement.addEventListener(end, () => {
+            pointerDown = false;
+            pen = null;
+        });
+    }
     window.addEventListener("touchend", mouseReleased);
     window.addEventListener("pointerup", mouseReleased);
 }
 
+// Whether full screen is drawn a quarter turn clockwise, for a phone held upright.
+function writingTurned() {
+    return document.getElementById("writingArea").classList.contains("fullscreen")
+        && window.matchMedia("(orientation: portrait)").matches;
+}
+
+// A pointer's position in the canvas's own coordinates. p5's mouseX and mouseY can't
+// follow the canvas through a rotation, so the pen uses this instead.
+function canvasPoint(event) {
+    const rect = document.getElementById("defaultCanvas0").getBoundingClientRect();
+    if (writingTurned()) {
+        // The canvas's top-left corner is at the screen's top right; its x runs down the
+        // screen and its y runs right to left.
+        return {x: event.clientY - rect.top, y: rect.right - event.clientX};
+    }
+    return {x: event.clientX - rect.left, y: event.clientY - rect.top};
+}
+
 function windowResized() {
+    // Turning the phone or entering the browser's own full screen resizes the area.
+    if (document.getElementById("writingArea").classList.contains("fullscreen")) {
+        fitCanvasToHolder(get());
+        return;
+    }
     const holder = document.getElementById("canvasHolder");
     const newWidth = holder.clientWidth;
     const newHeight = holder.clientHeight;
@@ -176,7 +215,9 @@ function fitCanvasToHolder(drawingImage) {
 }
 
 // Fills the screen with the sentence, the canvas and the buttons, for writing on a phone.
-// A fixed overlay rather than the Fullscreen API, which iPhones don't offer for a page.
+// It's a fixed overlay, turned landscape by style.css on a phone held upright. Where the
+// browser allows it (Android, not iPhone), it also takes the browser's own full screen and
+// locks the phone landscape, which hides the address bar.
 function toggleFullscreen() {
     const area = document.getElementById("writingArea");
     const button = document.getElementById("fullscreenButton");
@@ -188,16 +229,16 @@ function toggleFullscreen() {
     button.setAttribute("aria-label", entering ? "Exit full screen" : "Full screen");
     button.textContent = entering ? "Done" : "Full screen";
     fitCanvasToHolder(drawingImage);
-}
 
-function draw() {
-    fill(0);
-    if (drawing && !imageUploaded) {
-        stroke(0);
-        strokeWeight(7);
-        line(pmouseX, pmouseY, mouseX, mouseY);
+    if (entering && document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen()
+            .then(() => screen.orientation && screen.orientation.lock("landscape"))
+            .catch(() => {});  // Optional: the overlay already fills the screen.
+    } else if (!entering && document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
     }
 }
+
 
 const keys = {37: 1, 38: 1, 39: 1, 40: 1};
 
@@ -240,14 +281,12 @@ function enableScroll() {
 }
 
 function mousePressed() {
-    drawing = true;
     if (pointerDown) {
         disableScroll();
     }
 }
 
 function mouseReleased() {
-    drawing = false;
     enableScroll();
 }
 

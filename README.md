@@ -8,7 +8,7 @@ An adaptive handwriting practice app that uses OCR and sequence alignment to tra
 ## How It Works
 
 1. **Get a sentence** - GPT-6 Luna (low reasoning effort) generates a practice sentence weighted toward letters you struggle with
-2. **Write it** - Draw on the canvas or upload a photo of your handwriting. On a phone or tablet, **Full screen** turns the whole screen into the canvas
+2. **Write it** - Draw on the canvas or upload a photo of your handwriting. On a phone or tablet, **Full screen** turns the whole screen into a landscape canvas: on Android it locks the phone sideways, and on an iPhone held upright it's drawn sideways for you to turn the phone
 3. **Get feedback** - PaddleOCR reads your writing, Biopython's sequence alignment scores accuracy
 4. **Improve** - Character mastery grid updates, new sentences focus on weak letters
 
