@@ -5,3 +5,7 @@ openai==2.16.0
 paddleocr==3.7.0
 paddlepaddle==3.3.1
 python-dotenv==1.2.1
+# Security floors for transitive dependencies: Pillow 13 fixes heap overflows in its image
+# decoders, and certifi 2026.10.18 drops the compromised emSign roots.
+certifi==2026.10.23
+pillow==13.0.0

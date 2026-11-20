@@ -2,8 +2,8 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# System libraries for OpenCV, and OpenMP for Paddle
-RUN apt-get update && apt-get install -y \
+# Debian's security fixes, then system libraries for OpenCV and OpenMP for Paddle
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
     libgomp1 \
